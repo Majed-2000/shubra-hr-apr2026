@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "525720312193",
+    "project_id": "shubraemp",
+    "storage_bucket": "shubraemp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:525720312193:android:6fa89f5e6cce260670f080",
+        "android_client_info": {
+          "package_name": "com.shubra.hr"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAMnneRVemi5MM6fDJqHieUWmA3HBomElA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

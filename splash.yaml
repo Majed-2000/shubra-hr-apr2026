@@ -1,0 +1,13 @@
+ flutter_native_splash:
+  color: "#ffffff"
+  image: assets/shubra.png
+  branding: assets/shubra.png
+  branding_bottom_padding: 24
+  color_dark: "#ffffff"
+  image_dark: assets/shubra.png
+  branding_dark: assets/shubra.png
+  android_12:
+    image: assets/shubra.png
+    icon_background_color: "#ffffff"
+    image_dark: assets/shubra.png
+    icon_background_color_dark: "#ffffff"

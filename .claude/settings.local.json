@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wc -l \"C:/Users/smaji/Desktop/HR-iOS-main/lib/\"*.dart)"
+    ]
+  }
+}
