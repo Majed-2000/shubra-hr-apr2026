@@ -2,7 +2,23 @@
   "permissions": {
     "allow": [
       "Bash(wc -l \"C:/Users/smaji/Desktop/HR-iOS-main/lib/\"*.dart)",
-      "Bash(ls *)"
+      "Bash(ls *)",
+      "WebSearch",
+      "Bash(xargs wc *)",
+      "Bash(grep -E \"\\\\.dart$\")",
+      "WebFetch(domain:apps.apple.com)",
+      "WebFetch(domain:brandfetch.com)",
+      "WebFetch(domain:www.zawya.com)",
+      "WebFetch(domain:www.jisr.net)",
+      "WebFetch(domain:medium.com)",
+      "WebFetch(domain:dribbble.com)",
+      "WebFetch(domain:updates.jisr.net)",
+      "WebFetch(domain:jisr.zendesk.com)",
+      "WebFetch(domain:mobbin.com)",
+      "WebFetch(domain:colorswall.com)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git tag *)"
     ]
   }
 }

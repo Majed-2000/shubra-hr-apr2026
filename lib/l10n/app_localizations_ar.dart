@@ -15,7 +15,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get login => 'تسجيل الدخول';
 
   @override
-  String get shubra => 'مجموعة شبرا الطائف';
+  String get shubra => 'شركة شبرا الطائف';
 
   @override
   String get updateinfo => 'تحديث البيانات الشخصية';
