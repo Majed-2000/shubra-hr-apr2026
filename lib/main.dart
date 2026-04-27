@@ -31,7 +31,6 @@ import 'home_mgr.dart';
 import 'l10n/app_localizations.dart';
 import 'leave_requests_mgr.dart';
 import 'loan_requests_mgr.dart';
-import 'login_mgr.dart';
 import 'shared/utils/logger.dart';
 import 'theme.dart';
 import 'settings.dart';
@@ -148,7 +147,6 @@ class _MyAppState extends State<MyApp>  {
             '/splash': (context) => SplashScreen(),
             '/login': (context) => Login(),
             '/newaccount': (context) => NewAccount(),
-            '/loginmgr': (context) => LoginMgr(),
             '/homeMgr': (context) => HomeMgr(),
             '/newaccountmgr': (context) => NewAccountMGR(),
             '/home': (context) => Home(),
@@ -204,16 +202,11 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<void> checkAuth() async {
     await Future.delayed(Duration(seconds: 2));
     String? token = await _storage.read(key: "access_token");
-    String? type = await _storage.read(key: "type");
 
     if (!mounted) return;
 
     if (token != null) {
-      if (type == "mgr") {
-        Navigator.pushReplacementNamed(context, '/homeMgr');
-      } else {
-        Navigator.pushReplacementNamed(context, '/home');
-      }
+      Navigator.pushReplacementNamed(context, '/home');
     } else {
       Navigator.pushReplacementNamed(context, '/login');
     }

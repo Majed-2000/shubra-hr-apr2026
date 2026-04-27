@@ -161,6 +161,12 @@ class _HomeMgrState extends State<HomeMgr> {
               ),
               const Spacer(),
               _iconBtn(
+                Icons.swap_horiz_rounded,
+                onTap: () =>
+                    Navigator.pushReplacementNamed(context, "/home"),
+              ),
+              const SizedBox(width: 8),
+              _iconBtn(
                 Icons.notifications_outlined,
                 onTap: () =>
                     Navigator.pushNamed(context, "/notificationsmgr"),

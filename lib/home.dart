@@ -22,6 +22,7 @@ class _HomeState extends State<Home> {
 
   final _storage = const FlutterSecureStorage();
   String username = "";
+  bool isManager = false;
 
   late FirebaseMessaging messaging;
   Map<String, dynamic> empinfo = {};
@@ -59,9 +60,11 @@ class _HomeState extends State<Home> {
 
   Future<void> readName() async {
     String? name = await _storage.read(key: "name");
-    if (name != null) {
+    String? mgrFlag = await _storage.read(key: "is_manager");
+    if (mounted) {
       setState(() {
-        username = name;
+        if (name != null) username = name;
+        isManager = mgrFlag == 'true';
       });
     }
   }
@@ -159,6 +162,14 @@ class _HomeState extends State<Home> {
                 ),
               ),
               const Spacer(),
+              if (isManager) ...[
+                _iconBtn(
+                  Icons.admin_panel_settings_outlined,
+                  onTap: () =>
+                      Navigator.pushReplacementNamed(context, "/homeMgr"),
+                ),
+                const SizedBox(width: 8),
+              ],
               _iconBtn(
                 Icons.notifications_outlined,
                 onTap: () =>

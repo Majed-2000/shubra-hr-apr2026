@@ -75,8 +75,9 @@ class _LoginState extends State<Login> {
       if (response.statusCode == 200 && data['status'] == 'success') {
         await _storage.write(key: 'access_token', value: data['access_token']);
         await _storage.write(key: 'refresh_token', value: data['refresh_token']);
-        await _storage.write(key: 'type', value: "user");
         await _storage.write(key: 'name', value: data['user']['name']);
+        final isManager = data['is_manager'] == true;
+        await _storage.write(key: 'is_manager', value: isManager ? 'true' : 'false');
         Navigator.pushReplacementNamed(context, '/home');
       } else {
         _snack(AppLocalizations.of(context)!.wronginfo);
@@ -389,48 +390,6 @@ class _LoginState extends State<Login> {
                               requestOtp();
                             }
                           },
-                        ),
-                        const SizedBox(height: 16),
-                        Row(
-                          children: [
-                            const Expanded(
-                                child: Divider(color: AppColors.border)),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12),
-                              child: Text(
-                                  bi(context, ar: "أو", en: "or"),
-                                  style: const TextStyle(
-                                      color: AppColors.muted,
-                                      fontSize: 12)),
-                            ),
-                            const Expanded(
-                                child: Divider(color: AppColors.border)),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                        SizedBox(
-                          width: double.infinity,
-                          child: OutlinedButton.icon(
-                            onPressed: () {
-                              Navigator.pushNamed(context, '/loginmgr');
-                            },
-                            icon: const Icon(
-                              Icons.admin_panel_settings_outlined,
-                              color: AppColors.primary,
-                            ),
-                            label: Text(
-                              AppLocalizations.of(context)!.signinmgr,
-                              style: const TextStyle(
-                                  color: AppColors.primary),
-                            ),
-                            style: OutlinedButton.styleFrom(
-                              side: const BorderSide(
-                                  color: AppColors.primary, width: 1.2),
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 14),
-                            ),
-                          ),
                         ),
                       ],
                     ),
