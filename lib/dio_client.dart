@@ -2,7 +2,6 @@ import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'config/app_config.dart';
-import 'shared/utils/device_info.dart';
 import 'shared/utils/logger.dart';
 
 /// HTTP client wrapper around Dio.
@@ -33,7 +32,6 @@ class DioClient {
     _dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
         try {
-          options.headers['User-Agent'] = DeviceFingerprint.userAgent;
           final keys = await _activeKeys();
           final accessToken = await _storage.read(key: keys.accessKey);
           if (accessToken != null) {
