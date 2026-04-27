@@ -79,6 +79,14 @@ class _LoginState extends State<Login> {
         final isManager = data['is_manager'] == true;
         await _storage.write(key: 'is_manager', value: isManager ? 'true' : 'false');
         await _storage.write(key: 'current_view', value: 'user');
+        // Manager-scope tokens, if backend returns them. Used by dio_client
+        // when current_view == 'mgr' so /mgr/* endpoints get the right scope.
+        if (isManager && data['mgr_access_token'] != null) {
+          await _storage.write(
+              key: 'mgr_access_token', value: data['mgr_access_token']);
+          await _storage.write(
+              key: 'mgr_refresh_token', value: data['mgr_refresh_token']);
+        }
         Navigator.pushReplacementNamed(context, '/home');
       } else {
         _snack(AppLocalizations.of(context)!.wronginfo);

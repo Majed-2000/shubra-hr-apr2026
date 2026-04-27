@@ -173,13 +173,40 @@ class _HomeState extends State<Home> {
               ),
               const Spacer(),
               if (isManager) ...[
-                _iconBtn(
-                  Icons.admin_panel_settings_outlined,
-                  onTap: () async {
-                    await _storage.write(key: 'current_view', value: 'mgr');
-                    if (!mounted) return;
-                    Navigator.pushReplacementNamed(context, "/homeMgr");
-                  },
+                Material(
+                  color: AppColors.surfaceAlt,
+                  borderRadius: BorderRadius.circular(AppRadius.xs),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(AppRadius.xs),
+                    onTap: () async {
+                      await _storage.write(key: 'current_view', value: 'mgr');
+                      if (!mounted) return;
+                      Navigator.pushReplacementNamed(context, "/homeMgr");
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 6),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.admin_panel_settings_outlined,
+                            size: 16,
+                            color: AppColors.onSurface,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            bi(context, ar: "المدير", en: "Manager"),
+                            style: const TextStyle(
+                              color: AppColors.onSurface,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
                 const SizedBox(width: 8),
               ],

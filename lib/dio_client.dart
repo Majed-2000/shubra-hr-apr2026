@@ -6,12 +6,24 @@ import 'shared/utils/logger.dart';
 
 /// HTTP client wrapper around Dio.
 ///
-/// - Injects the stored `access_token` as a Bearer header on every request.
-/// - On 401, transparently calls `/refresh` with the saved `refresh_token`,
-///   persists the new token pair, and retries the original request once.
+/// Picks an access token based on `current_view` so a user who is also a
+/// manager can have two scopes side-by-side: the regular `access_token`
+/// for employee endpoints, and `mgr_access_token` for `/mgr/*` endpoints.
+/// Falls back to the user token when the manager pair isn't stored.
 class DioClient {
   final Dio _dio = Dio();
   final _storage = const FlutterSecureStorage();
+
+  Future<({String accessKey, String refreshKey})> _activeKeys() async {
+    final view = await _storage.read(key: 'current_view');
+    if (view == 'mgr') {
+      final mgrAccess = await _storage.read(key: 'mgr_access_token');
+      if (mgrAccess != null) {
+        return (accessKey: 'mgr_access_token', refreshKey: 'mgr_refresh_token');
+      }
+    }
+    return (accessKey: 'access_token', refreshKey: 'refresh_token');
+  }
 
   DioClient() {
     _dio.options.baseUrl = AppConfig.apiBaseUrl;
@@ -20,7 +32,8 @@ class DioClient {
     _dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
         try {
-          final accessToken = await _storage.read(key: 'access_token');
+          final keys = await _activeKeys();
+          final accessToken = await _storage.read(key: keys.accessKey);
           if (accessToken != null) {
             options.headers['Authorization'] = 'Bearer $accessToken';
           }
@@ -32,7 +45,8 @@ class DioClient {
       onError: (DioException error, handler) async {
         if (error.response?.statusCode == 401) {
           try {
-            final refreshToken = await _storage.read(key: 'refresh_token');
+            final keys = await _activeKeys();
+            final refreshToken = await _storage.read(key: keys.refreshKey);
             if (refreshToken == null) {
               return handler.reject(error);
             }
@@ -53,8 +67,8 @@ class DioClient {
               final newAccessToken = refreshResponse.data['access_token'];
               final newRefreshToken = refreshResponse.data['refresh_token'];
 
-              await _storage.write(key: 'access_token', value: newAccessToken);
-              await _storage.write(key: 'refresh_token', value: newRefreshToken);
+              await _storage.write(key: keys.accessKey, value: newAccessToken);
+              await _storage.write(key: keys.refreshKey, value: newRefreshToken);
 
               final retryRequest = error.requestOptions;
               retryRequest.headers['Authorization'] = 'Bearer $newAccessToken';
