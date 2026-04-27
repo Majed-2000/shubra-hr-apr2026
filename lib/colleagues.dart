@@ -99,7 +99,7 @@ class _ColleaguesState extends State<Colleagues> {
       subtitle: t.colleaguesSubtitle,
       leadingIcon: Icons.groups_rounded,
       body: _isLoading
-          ? const Loader()
+          ? const SkeletonList()
           : !_hasData
               ? ListView(
                   children: [

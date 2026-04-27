@@ -131,15 +131,7 @@ class _SessionsScreenState extends State<SessionsScreen> {
         color: AppColors.primary,
         onRefresh: _fetch,
         child: _loading
-            ? const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(40),
-                  child: CircularProgressIndicator(
-                    color: AppColors.primary,
-                    strokeWidth: 2.4,
-                  ),
-                ),
-              )
+            ? const SkeletonList(count: 4)
             : _error != null
                 ? ListView(
                     padding: const EdgeInsets.symmetric(vertical: 60),

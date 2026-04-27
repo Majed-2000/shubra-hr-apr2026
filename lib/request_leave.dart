@@ -302,7 +302,70 @@ class _RequestLeaveState extends State<RequestLeave> {
           bi(context, ar: "تقديم طلب إجازة جديد", en: "Submit a new leave"),
       leadingIcon: Icons.time_to_leave_outlined,
       body: _loading
-          ? const Loader()
+          ? ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                // Balance card
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  padding: const EdgeInsets.all(18),
+                  child: Row(
+                    children: const [
+                      Skeleton.box(size: 44),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Skeleton(width: 120, height: 12),
+                            SizedBox(height: 6),
+                            Skeleton(width: 70, height: 22),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 14),
+                // Dates card
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: const [
+                      Skeleton(width: double.infinity, height: 48, radius: 12),
+                      SizedBox(height: 10),
+                      Skeleton(width: double.infinity, height: 48, radius: 12),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 14),
+                // Type cards
+                const Skeleton(width: 140, height: 16),
+                const SizedBox(height: 10),
+                Row(
+                  children: const [
+                    Expanded(child: Skeleton(height: 90, radius: 14)),
+                    SizedBox(width: 10),
+                    Expanded(child: Skeleton(height: 90, radius: 14)),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                // Reason field
+                const Skeleton(width: double.infinity, height: 120, radius: 12),
+                const SizedBox(height: 14),
+                // Submit button
+                const Skeleton(width: double.infinity, height: 48, radius: 12),
+              ],
+            )
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Column(

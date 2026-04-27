@@ -153,7 +153,10 @@ class _CustodyMgrState extends State<CustodyMgr> {
                             Lrequests.length + (_isLoading ? 1 : 0),
                         itemBuilder: (context, index) {
                           if (index == Lrequests.length) {
-                            return const Loader();
+                            return const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 8),
+                              child: SkeletonListTile(),
+                            );
                           }
                           final item = Lrequests[index];
                           return Padding(

@@ -75,7 +75,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           : bi(context, ar: "ملف الموظف", en: "Employee profile"),
       leadingIcon: Icons.person_outline_rounded,
       body: loading
-          ? const Loader()
+          ? _buildSkeleton()
           : info.isEmpty
               ? ListView(
                   children: [
@@ -239,6 +239,90 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ],
                   ),
                 ),
+    );
+  }
+
+  Widget _buildSkeleton() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          // Avatar + name
+          Container(
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              border: Border.all(color: AppColors.border),
+            ),
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              children: const [
+                Skeleton.box(size: 76, radius: 38),
+                SizedBox(height: 14),
+                Skeleton(width: 180, height: 16),
+                SizedBox(height: 8),
+                Skeleton(width: 120, height: 12),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+          // Info card with rows
+          Container(
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              border: Border.all(color: AppColors.border),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Column(
+              children: [
+                _profileSkeletonRow(),
+                const Divider(height: 1, color: AppColors.border),
+                _profileSkeletonRow(),
+                const Divider(height: 1, color: AppColors.border),
+                _profileSkeletonRow(),
+                const Divider(height: 1, color: AppColors.border),
+                _profileSkeletonRow(),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+          // Finance card placeholder
+          Container(
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              border: Border.all(color: AppColors.border),
+            ),
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                Skeleton(width: 140, height: 14),
+                SizedBox(height: 16),
+                Skeleton(width: 220, height: 28),
+                SizedBox(height: 6),
+                Skeleton(width: 100, height: 12),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _profileSkeletonRow() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        children: const [
+          Skeleton.box(size: 36, radius: 8),
+          SizedBox(width: 12),
+          Skeleton(width: 80, height: 12),
+          Spacer(),
+          Skeleton(width: 110, height: 13),
+        ],
+      ),
     );
   }
 

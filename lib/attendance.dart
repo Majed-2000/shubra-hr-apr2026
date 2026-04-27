@@ -85,7 +85,7 @@ class _AttendanceState extends State<Attendance> {
           _buildFilterBar(context, t),
           Expanded(
             child: _isLoading
-                ? const Loader()
+                ? const SkeletonList()
                 : _days.isEmpty
                     ? ListView(
                         children: [

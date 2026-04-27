@@ -40,7 +40,9 @@ class PaginatedListView<T> extends StatelessWidget {
   }
 
   Widget _buildBody() {
-    if (isLoading && items.isEmpty) return const Loader();
+    if (isLoading && items.isEmpty) {
+      return const SkeletonList();
+    }
     if (items.isEmpty) {
       return ListView(
         physics: const AlwaysScrollableScrollPhysics(),
@@ -53,7 +55,12 @@ class PaginatedListView<T> extends StatelessWidget {
       physics: const AlwaysScrollableScrollPhysics(),
       itemCount: items.length + (isLoading ? 1 : 0),
       itemBuilder: (context, index) {
-        if (index == items.length && isLoading) return const Loader();
+        if (index == items.length && isLoading) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 8),
+            child: SkeletonListTile(),
+          );
+        }
         return itemBuilder(context, items[index], index);
       },
     );

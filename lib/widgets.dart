@@ -516,3 +516,75 @@ class _SkeletonState extends State<Skeleton>
     );
   }
 }
+
+/// Single placeholder row used inside a [SkeletonList] — an avatar block,
+/// a primary line, and a shorter secondary line. Wrapped in the same
+/// glass card as real list items so the layout doesn't shift when data
+/// arrives.
+class SkeletonListTile extends StatelessWidget {
+  final bool hasAvatar;
+  final EdgeInsetsGeometry margin;
+  const SkeletonListTile({
+    super.key,
+    this.hasAvatar = true,
+    this.margin = const EdgeInsets.only(bottom: 10),
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: margin,
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: AppColors.border),
+      ),
+      padding: const EdgeInsets.all(14),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          if (hasAvatar) ...const [
+            Skeleton.box(size: 44),
+            SizedBox(width: 12),
+          ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                Skeleton(width: 160, height: 14),
+                SizedBox(height: 8),
+                Skeleton(width: 100, height: 11),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Drop-in replacement for [Loader] on list-shaped screens. Renders
+/// [count] [SkeletonListTile]s inside a scrollable list so the user
+/// gets a sense of the upcoming layout instead of a centred spinner.
+class SkeletonList extends StatelessWidget {
+  final int count;
+  final bool hasAvatar;
+  final EdgeInsetsGeometry padding;
+
+  const SkeletonList({
+    super.key,
+    this.count = 6,
+    this.hasAvatar = true,
+    this.padding = const EdgeInsets.fromLTRB(16, 16, 16, 24),
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      padding: padding,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: count,
+      itemBuilder: (_, __) => SkeletonListTile(hasAvatar: hasAvatar),
+    );
+  }
+}

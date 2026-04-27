@@ -98,7 +98,40 @@ class _SalaryDetailsState extends State<SalaryDetails> {
       subtitle: t.salarySubtitle,
       leadingIcon: Icons.payments_rounded,
       body: _isLoading
-          ? const Loader()
+          ? ListView(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+              children: [
+                // Hero summary card
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Skeleton(width: 120, height: 13),
+                      SizedBox(height: 14),
+                      Skeleton(width: 200, height: 32),
+                      SizedBox(height: 8),
+                      Skeleton(width: 90, height: 12),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 18),
+                const Skeleton(width: 140, height: 16),
+                const SizedBox(height: 10),
+                const SkeletonListTile(hasAvatar: false),
+                const SkeletonListTile(hasAvatar: false),
+                const SizedBox(height: 12),
+                const Skeleton(width: 140, height: 16),
+                const SizedBox(height: 10),
+                const SkeletonListTile(hasAvatar: false),
+                const SkeletonListTile(hasAvatar: false),
+              ],
+            )
           : !_hasData
               ? ListView(
                   children: [

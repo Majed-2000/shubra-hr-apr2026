@@ -155,7 +155,66 @@ class _DigitalCardState extends State<DigitalCard>
       subtitle: t.digitalCardSubtitle,
       leadingIcon: Icons.badge_rounded,
       body: _isLoading
-          ? const Loader()
+          ? Padding(
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 28),
+              child: Column(
+                children: [
+                  // Card-shaped placeholder
+                  AspectRatio(
+                    aspectRatio: 1.586,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(AppRadius.lg),
+                        border: Border.all(color: AppColors.border),
+                      ),
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            mainAxisAlignment:
+                                MainAxisAlignment.spaceBetween,
+                            children: const [
+                              Skeleton(width: 90, height: 14),
+                              Skeleton.box(size: 36),
+                            ],
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: const [
+                              Skeleton(width: 180, height: 18),
+                              SizedBox(height: 8),
+                              Skeleton(width: 110, height: 12),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment:
+                                MainAxisAlignment.spaceBetween,
+                            children: const [
+                              Skeleton(width: 70, height: 11),
+                              Skeleton(width: 60, height: 11),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  const Skeleton(width: 200, height: 14),
+                  const SizedBox(height: 14),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: const [
+                      Skeleton(width: 130, height: 44, radius: 22),
+                      SizedBox(width: 12),
+                      Skeleton(width: 130, height: 44, radius: 22),
+                    ],
+                  ),
+                ],
+              ),
+            )
           : !_hasData
               ? ListView(
                   children: [
