@@ -180,7 +180,7 @@ class _LoginState extends State<Login> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    bi(context, ar: "٦ أرقام", en: "6 digits"),
+                    bi(context, ar: "6 أرقام", en: "6 digits"),
                     style: const TextStyle(
                         color: AppColors.muted, fontSize: 13),
                   ),

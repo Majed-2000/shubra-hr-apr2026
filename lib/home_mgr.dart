@@ -292,7 +292,7 @@ class _HomeMgrState extends State<HomeMgr> {
     );
   }
 
-  // ��── Birthday & occasions ───────────────────────────────────
+  // ─── Birthday & occasions ───────────────────────────────────
   Widget _buildBirthdayAndOccasions(AppLocalizations t) {
     final hasBd = empinfo['bd'] == true;
     final hasOcc =
@@ -401,7 +401,7 @@ class _HomeMgrState extends State<HomeMgr> {
         children: [
           SectionHeader(
               title: bi(context,
-                  ar: "إجرا��ات المدير", en: "Manager Actions"),
+                  ar: "إجراءات المدير", en: "Manager Actions"),
               icon: Icons.bolt_rounded),
           const SizedBox(height: 10),
           GridView.builder(

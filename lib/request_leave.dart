@@ -197,7 +197,7 @@ class _RequestLeaveState extends State<RequestLeave> {
     }
     if (_letterCount < 5) {
       _snack(bi(context,
-          ar: "اكتب سبب الإجازة (٥ أحرف على الأقل)",
+          ar: "اكتب سبب الإجازة (5 أحرف على الأقل)",
           en: "Write the reason (at least 5 letters)"));
       return;
     }
@@ -571,7 +571,7 @@ class _RequestLeaveState extends State<RequestLeave> {
                     const SizedBox(width: 4),
                     Text(
                       bi(context,
-                          ar: "$_letterCount / ٥ أحرف",
+                          ar: "$_letterCount / 5 أحرف",
                           en: "$_letterCount / 5 letters"),
                       style: TextStyle(
                         color: enough
@@ -592,7 +592,7 @@ class _RequestLeaveState extends State<RequestLeave> {
             maxLines: 5,
             decoration: InputDecoration(
               hintText: bi(context,
-                  ar: "اكتب سبب طلب الإجازة بوضوح (٥ أحرف على الأقل)...",
+                  ar: "اكتب سبب طلب الإجازة بوضوح (5 أحرف على الأقل)...",
                   en:
                       "Write the reason for your request (at least 5 letters)..."),
             ),

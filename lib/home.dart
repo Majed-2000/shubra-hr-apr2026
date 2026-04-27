@@ -136,7 +136,7 @@ class _HomeState extends State<Home> {
     );
   }
 
-  // ─── Clean white header ───────────────────────────��─────────
+  // ─── Clean white header ──────────────────────────────────────
   Widget _buildHeader(
       BuildContext context, AppLocalizations t, String currentLang) {
     final padding = MediaQuery.of(context).padding.top;
