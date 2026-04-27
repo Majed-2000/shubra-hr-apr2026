@@ -1,10 +1,13 @@
 import 'dart:async';
+import 'package:dio/dio.dart' show DioException, Options;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shubraepp/main.dart';
 import 'dio_client.dart';
 import 'l10n/app_localizations.dart';
+import 'shared/utils/dio_errors.dart';
+import 'shared/utils/logger.dart';
 import 'shared/utils/snackbar.dart';
 import 'theme.dart';
 import 'widgets.dart';
@@ -47,15 +50,24 @@ class _LoginState extends State<Login> {
       final response = await dioClient.post(
         '/login',
         data: {'empcode': _employeeIdController.text},
+        // Don't throw on 4xx — we want the body's `message` instead of a
+        // generic DioException, so the user sees the real reason.
+        options: Options(validateStatus: (s) => s != null && s < 500),
       );
       final data = response.data;
-      if (data['status'] == 'success') {
+      final code = response.statusCode ?? 0;
+      if (code == 200 && data is Map && data['status'] == 'success') {
         _showOtpModal();
         startResendTimer();
       } else {
-        _snack(AppLocalizations.of(context)!.wronginfo);
+        logD('login /login failed: $code body=$data');
+        _snack(_authErrorFor(code, data, isOtpStep: false));
       }
+    } on DioException catch (e) {
+      logD('login /login dio exception: ${e.message} body=${e.response?.data}');
+      _snack(parseDioError(e, isArabic: isArabic(context)));
     } catch (e) {
+      logD('login /login unexpected: $e');
       _snack(AppLocalizations.of(context)!.wronginfo);
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -70,9 +82,11 @@ class _LoginState extends State<Login> {
           'empcode': _employeeIdController.text,
           'otp': _otpController.text,
         },
+        options: Options(validateStatus: (s) => s != null && s < 500),
       );
       final data = response.data;
-      if (response.statusCode == 200 && data['status'] == 'success') {
+      final code = response.statusCode ?? 0;
+      if (code == 200 && data is Map && data['status'] == 'success') {
         await _storage.write(key: 'access_token', value: data['access_token']);
         await _storage.write(key: 'refresh_token', value: data['refresh_token']);
         await _storage.write(key: 'name', value: data['user']['name']);
@@ -89,10 +103,69 @@ class _LoginState extends State<Login> {
         }
         Navigator.pushReplacementNamed(context, '/home');
       } else {
-        _snack(AppLocalizations.of(context)!.wronginfo);
+        logD('login /verify-user failed: $code body=$data');
+        _snack(_authErrorFor(code, data, isOtpStep: true));
       }
+    } on DioException catch (e) {
+      logD('login /verify-user dio exception: ${e.message} body=${e.response?.data}');
+      _snack(parseDioError(e, isArabic: isArabic(context)));
     } catch (e) {
+      logD('login /verify-user unexpected: $e');
       _snack(AppLocalizations.of(context)!.wronginfo);
+    }
+  }
+
+  /// Pick the most specific message available for an auth failure.
+  ///
+  /// Priority: backend's `message` / `error` field > status-code-specific
+  /// fallback > generic `wronginfo`. [isOtpStep] flips a few fallbacks
+  /// (e.g. 401 means "wrong OTP" during verify, not during /login).
+  String _authErrorFor(int code, dynamic data, {required bool isOtpStep}) {
+    if (data is Map) {
+      final raw = data['message'] ?? data['error'] ?? data['detail'];
+      final msg = raw?.toString().trim();
+      if (msg != null && msg.isNotEmpty) return msg;
+    }
+    final ar = isArabic(context);
+    switch (code) {
+      case 400:
+        return ar
+            ? "البيانات المرسلة غير صالحة"
+            : "Invalid request data";
+      case 401:
+        return isOtpStep
+            ? (ar ? "رمز التحقق غير صحيح" : "Wrong verification code")
+            : (ar ? "غير مصرح" : "Unauthorized");
+      case 403:
+        return ar
+            ? "الحساب موقوف، تواصل مع الموارد البشرية"
+            : "Account is blocked — contact HR";
+      case 404:
+        return isOtpStep
+            ? (ar
+                ? "رمز التحقق منتهي أو غير موجود"
+                : "Verification code not found or expired")
+            : (ar
+                ? "رقم الموظف غير مسجل في النظام"
+                : "Employee code is not registered");
+      case 409:
+        return ar
+            ? "رمز التحقق منتهي أو سبق استخدامه"
+            : "OTP expired or already used";
+      case 410:
+        return ar
+            ? "رمز التحقق منتهي الصلاحية"
+            : "OTP has expired";
+      case 422:
+        return ar
+            ? "البيانات المدخلة غير مكتملة"
+            : "Submitted data is incomplete";
+      case 429:
+        return ar
+            ? "محاولات كثيرة، يُرجى الانتظار قبل إعادة المحاولة"
+            : "Too many attempts, please wait before retrying";
+      default:
+        return AppLocalizations.of(context)!.wronginfo;
     }
   }
 
