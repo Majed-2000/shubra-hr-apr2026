@@ -6,6 +6,7 @@ import 'main.dart';
 import 'theme.dart';
 import 'widgets.dart';
 
+/// Settings — language toggle, account management, logout.
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
@@ -63,7 +64,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const Divider(height: 1, color: AppColors.border),
                 _SettingTile(
                   icon: Icons.notifications_outlined,
-                  iconColor: const Color(0xFF8B5CF6),
+                  iconColor: AppColors.primary,
                   title: t.notifications,
                   onTap: () =>
                       Navigator.pushNamed(context, "/notifications"),
@@ -86,7 +87,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const Divider(height: 1, color: AppColors.border),
                 _SettingTile(
                   icon: Icons.manage_accounts_rounded,
-                  iconColor: const Color(0xFF0EA5E9),
+                  iconColor: AppColors.secondary,
                   title: t.updateinfo,
                   onTap: () =>
                       Navigator.pushNamed(context, "/updateInfo"),

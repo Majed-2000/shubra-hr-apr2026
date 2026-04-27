@@ -3,31 +3,36 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localization/flutter_localization.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:shubraepp/LeaveRequests.dart';
-import 'package:shubraepp/LoanRequests.dart';
-import 'package:shubraepp/RequestLeave.dart';
-import 'package:shubraepp/addNotification.dart';
+import 'package:shubraepp/leave_requests.dart';
+import 'package:shubraepp/loan_requests.dart';
+import 'package:shubraepp/request_leave.dart';
+import 'package:shubraepp/add_notification.dart';
+import 'package:shubraepp/attendance.dart';
 import 'package:shubraepp/custody.dart';
-import 'package:shubraepp/empMove.dart';
-import 'package:shubraepp/empRateMgr.dart';
-import 'package:shubraepp/emprate.dart';
+import 'package:shubraepp/digital_card.dart';
+import 'package:shubraepp/emp_move.dart';
+import 'package:shubraepp/emp_rate_mgr.dart';
+import 'package:shubraepp/emp_rate.dart';
 import 'package:shubraepp/home.dart';
 import 'package:shubraepp/login.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:shubraepp/newaccount.dart';
-import 'package:shubraepp/newaccountMgr.dart';
-import 'package:shubraepp/requestLoan.dart';
-import 'package:shubraepp/tokenloans.dart';
-import 'package:shubraepp/updateInfo.dart';
-import 'Complaint.dart';
-import 'NotificationMgr.dart';
-import 'Notifications.dart';
-import 'custodyMgr.dart';
-import 'homeMgr.dart';
+import 'package:shubraepp/new_account.dart';
+import 'package:shubraepp/new_account_mgr.dart';
+import 'package:shubraepp/request_loan.dart';
+import 'package:shubraepp/salary_details.dart';
+import 'package:shubraepp/token_loans.dart';
+import 'package:shubraepp/update_info.dart';
+import 'colleagues.dart';
+import 'complaint.dart';
+import 'notification_mgr.dart';
+import 'notifications.dart';
+import 'custody_mgr.dart';
+import 'home_mgr.dart';
 import 'l10n/app_localizations.dart';
-import 'leaveRequestsMgr.dart';
-import 'loanRequestsMgr.dart';
-import 'loginMgr.dart';
+import 'leave_requests_mgr.dart';
+import 'loan_requests_mgr.dart';
+import 'login_mgr.dart';
+import 'shared/utils/logger.dart';
 import 'theme.dart';
 import 'settings.dart';
 import 'profile.dart';
@@ -56,7 +61,7 @@ void main() async {
     statusBarIconBrightness: Brightness.light,
     systemNavigationBarColor: Colors.white,
     systemNavigationBarIconBrightness: Brightness.dark,
-    systemNavigationBarDividerColor: Color(0xFFE2E8F0),
+    systemNavigationBarDividerColor: Color(0xFFE5E7EB),
   ));
 
   final _storage = FlutterSecureStorage();
@@ -72,6 +77,7 @@ void main() async {
 
   runApp(MyApp());
 }
+/// Root widget — wires localization, theme, and the route table.
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
@@ -90,16 +96,17 @@ class _MyAppState extends State<MyApp>  {
     );
 
     if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-      // Get APNs token (iOS only)
+      // Get APNs token (iOS only). Never log the token itself — log only that
+      // one was acquired and its length, which is enough to debug rollouts.
       final apnsToken = await FirebaseMessaging.instance.getAPNSToken();
-      print("APNs Token: $apnsToken");
+      logD('APNs token acquired (length=${apnsToken?.length ?? 0})');
 
       if (apnsToken != null) {
         final fcmToken = await FirebaseMessaging.instance.getToken();
-        print("FCM Token: $fcmToken");
+        logD('FCM token acquired (length=${fcmToken?.length ?? 0})');
       }
     } else {
-      print("User declined or has not accepted permission");
+      logD('Notification permission denied or not yet granted');
     }
   }
   @override
@@ -108,12 +115,12 @@ class _MyAppState extends State<MyApp>  {
     _initFCM();
     // Foreground messages
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      print("Message Received: ${message.notification?.title}");
+      logD('Foreground message: ${message.notification?.title}');
     });
 
     // Background messages
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      print("Notification Clicked!");
+      logD('Notification opened from background');
     });
   }
 
@@ -142,26 +149,30 @@ class _MyAppState extends State<MyApp>  {
             '/login': (context) => Login(),
             '/newaccount': (context) => NewAccount(),
             '/loginmgr': (context) => LoginMgr(),
-            '/homeMgr': (context) => homeMgr(),
+            '/homeMgr': (context) => HomeMgr(),
             '/newaccountmgr': (context) => NewAccountMGR(),
             '/home': (context) => Home(),
-            '/updateInfo': (context) => updateInfo(),
+            '/updateInfo': (context) => UpdateInfo(),
             '/complaint': (context) => Complaint(),
-            '/moves': (context) => empMove(),
-            '/custody': (context) => custody(),
-            '/custodyMgr': (context) => custodyMgr(),
-            '/emprate': (context) => empRate(),
+            '/moves': (context) => EmpMove(),
+            '/attendance': (context) => const Attendance(),
+            '/salaryDetails': (context) => const SalaryDetails(),
+            '/digitalCard': (context) => const DigitalCard(),
+            '/colleagues': (context) => const Colleagues(),
+            '/custody': (context) => Custody(),
+            '/custodyMgr': (context) => CustodyMgr(),
+            '/emprate': (context) => EmpRate(),
             '/notifications': (context) => Notifications(),
             '/notificationsmgr': (context) => NotificationsMgr(),
-            '/addnoti': (context) => addNotification(),
-            '/tokenloans': (context) => tokenloans(),
+            '/addnoti': (context) => AddNotification(),
+            '/tokenloans': (context) => TokenLoans(),
             '/requestLoan': (context) => RequestLoan(),
             '/loanRequests': (context) => Loanrequests(),
             '/requestLeave': (context) => RequestLeave(),
             '/leaveRequests': (context) => Leaverequests(),
             '/leaveRequestsMgr': (context) => LeaverequestsMgr(),
             '/loanRequestsMgr': (context) => LoanrequestsMgr(),
-            '/emprateMgr': (context) => empRateMgr(),
+            '/emprateMgr': (context) => EmpRateMgr(),
             '/settings': (context) => const SettingsScreen(),
             '/profile': (context) => const ProfileScreen(),
             '/about': (context) => const AboutScreen(),
@@ -172,6 +183,8 @@ class _MyAppState extends State<MyApp>  {
     );
   }
 }
+/// Initial gate: reads stored token and redirects to /home, /homeMgr,
+/// or /login based on what's persisted in secure storage.
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -209,55 +222,48 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(gradient: AppColors.heroGradient),
-        child: SafeArea(
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Spacer(),
-                Container(
-                  padding: const EdgeInsets.all(28),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(AppRadius.xl),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.15),
-                        blurRadius: 30,
-                        offset: const Offset(0, 10),
-                      ),
-                    ],
-                  ),
-                  child: Image.asset("assets/shubra.png", height: 120),
+      backgroundColor: AppColors.bg,
+      body: SafeArea(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.all(28),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(AppRadius.lg),
+                  border: Border.all(color: AppColors.border),
                 ),
-                const SizedBox(height: 28),
-                const SizedBox(
-                  width: 32,
-                  height: 32,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.6,
-                    valueColor: AlwaysStoppedAnimation(Colors.white),
-                  ),
+                child: Image.asset("assets/shubra.png", height: 100),
+              ),
+              const SizedBox(height: 28),
+              SizedBox(
+                width: 28,
+                height: 28,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.4,
+                  valueColor:
+                      AlwaysStoppedAnimation(AppColors.primary),
                 ),
-                const Spacer(),
-                Padding(
-                  padding: EdgeInsets.only(
-                      bottom: 24 +
-                          MediaQuery.of(context).padding.bottom),
-                  child: const Text(
-                    "SHUBRA",
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 13,
-                      letterSpacing: 4,
-                      fontWeight: FontWeight.w700,
-                    ),
+              ),
+              const Spacer(),
+              Padding(
+                padding: EdgeInsets.only(
+                    bottom: 24 +
+                        MediaQuery.of(context).padding.bottom),
+                child: const Text(
+                  "SHUBRA",
+                  style: TextStyle(
+                    color: AppColors.muted,
+                    fontSize: 12,
+                    letterSpacing: 4,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

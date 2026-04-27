@@ -2,39 +2,40 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class AppColors {
-  // Modern blue palette (no red branding)
-  static const Color primary = Color(0xFF1E40AF);      // indigo-800
-  static const Color primaryDark = Color(0xFF1E3A8A);  // indigo-900
-  static const Color secondary = Color(0xFF0EA5E9);    // sky-500
-  static const Color secondaryLight = Color(0xFF3B82F6); // blue-500
-  static const Color accent = Color(0xFF06B6D4);       // cyan-500
+  // Jisr-inspired teal palette
+  static const Color primary = Color(0xFF19D4B5);      // teal
+  static const Color primaryDark = Color(0xFF1A1A2E);  // near-black
+  static const Color secondary = Color(0xFF14CCAB);    // deep teal
+  static const Color secondaryLight = Color(0xFF78E4D0); // light aqua
+  static const Color accent = Color(0xFF14CCAB);       // deep teal
   static const Color success = Color(0xFF10B981);
   static const Color warning = Color(0xFFF59E0B);
   static const Color danger = Color(0xFFEF4444);
 
-  static const Color bg = Color(0xFFF5F7FB);
+  static const Color bg = Color(0xFFF5F9F8);
   static const Color surface = Colors.white;
-  static const Color surfaceAlt = Color(0xFFEEF2F7);
-  static const Color onSurface = Color(0xFF0F172A);    // slate-900
-  static const Color muted = Color(0xFF64748B);        // slate-500
-  static const Color border = Color(0xFFE2E8F0);       // slate-200
+  static const Color surfaceAlt = Color(0xFFEDF5F3);
+  static const Color onSurface = Color(0xFF1A1A2E);    // near-black
+  static const Color muted = Color(0xFF77797A);        // gray
+  static const Color border = Color(0xFFE5E7EB);       // light gray
 
+  // Keep heroGradient for login/splash branding only
   static const LinearGradient heroGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF1E3A8A), Color(0xFF3B82F6)],
+    colors: [Color(0xFF1A1A2E), Color(0xFF19D4B5)],
   );
 
   static const LinearGradient primaryGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF2563EB), Color(0xFF1E40AF)],
+    colors: [Color(0xFF19D4B5), Color(0xFF14CCAB)],
   );
 
   static const LinearGradient softGradient = LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
-    colors: [Color(0xFFFFFFFF), Color(0xFFF5F7FB)],
+    colors: [Color(0xFFFFFFFF), Color(0xFFF5F9F8)],
   );
 }
 
@@ -49,23 +50,23 @@ class AppRadius {
 class AppShadows {
   static List<BoxShadow> card = [
     BoxShadow(
-      color: Colors.black.withOpacity(0.05),
-      blurRadius: 18,
-      offset: const Offset(0, 6),
+      color: Colors.black.withOpacity(0.02),
+      blurRadius: 8,
+      offset: const Offset(0, 2),
     ),
   ];
   static List<BoxShadow> soft = [
     BoxShadow(
-      color: Colors.black.withOpacity(0.04),
-      blurRadius: 10,
-      offset: const Offset(0, 3),
+      color: Colors.black.withOpacity(0.015),
+      blurRadius: 6,
+      offset: const Offset(0, 2),
     ),
   ];
   static List<BoxShadow> pop = [
     BoxShadow(
-      color: AppColors.primary.withOpacity(0.30),
-      blurRadius: 20,
-      offset: const Offset(0, 8),
+      color: AppColors.primary.withOpacity(0.12),
+      blurRadius: 10,
+      offset: const Offset(0, 4),
     ),
   ];
 }
@@ -86,21 +87,21 @@ class AppTheme {
       appBarTheme: const AppBarTheme(
         elevation: 0,
         scrolledUnderElevation: 0,
-        backgroundColor: Colors.transparent,
-        foregroundColor: Colors.white,
+        backgroundColor: Colors.white,
+        foregroundColor: AppColors.onSurface,
         centerTitle: true,
         systemOverlayStyle: SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
-          statusBarIconBrightness: Brightness.light,
-          statusBarBrightness: Brightness.dark,
+          statusBarIconBrightness: Brightness.dark,
+          statusBarBrightness: Brightness.light,
         ),
         titleTextStyle: TextStyle(
-          color: Colors.white,
+          color: AppColors.onSurface,
           fontWeight: FontWeight.w700,
           fontSize: 18,
           letterSpacing: 0.2,
         ),
-        iconTheme: IconThemeData(color: Colors.white),
+        iconTheme: IconThemeData(color: AppColors.onSurface),
       ),
       cardTheme: CardThemeData(
         elevation: 0,
@@ -108,7 +109,7 @@ class AppTheme {
         surfaceTintColor: Colors.transparent,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadius.lg),
+          borderRadius: BorderRadius.circular(AppRadius.md),
           side: const BorderSide(color: AppColors.border, width: 1),
         ),
       ),
@@ -120,7 +121,7 @@ class AppTheme {
           padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
           textStyle: const TextStyle(
             fontSize: 15,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
             letterSpacing: 0.2,
           ),
           shape: RoundedRectangleBorder(
@@ -130,14 +131,14 @@ class AppTheme {
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: AppColors.secondary,
+          foregroundColor: AppColors.primary,
           textStyle: const TextStyle(fontWeight: FontWeight.w600),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.primary,
-          side: const BorderSide(color: AppColors.primary, width: 1.4),
+          side: const BorderSide(color: AppColors.primary, width: 1.2),
           padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.sm),
@@ -175,9 +176,18 @@ class AppTheme {
         space: 1,
       ),
       listTileTheme: const ListTileThemeData(
-        iconColor: AppColors.secondary,
+        iconColor: AppColors.primary,
         textColor: AppColors.onSurface,
         contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      ),
+      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+        backgroundColor: Colors.white,
+        selectedItemColor: AppColors.primary,
+        unselectedItemColor: AppColors.muted,
+        type: BottomNavigationBarType.fixed,
+        elevation: 0,
+        selectedLabelStyle: TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+        unselectedLabelStyle: TextStyle(fontSize: 11, fontWeight: FontWeight.w500),
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
@@ -199,6 +209,58 @@ class AppTheme {
         elevation: 0,
         surfaceTintColor: Colors.transparent,
       ),
+      // Pop-out menus from DropdownButton, PopupMenuButton, etc. default to
+      // a flat gray Material look that clashes with the rest of the app.
+      // Theme them to a clean white card with the brand border + radius so
+      // every dropdown matches the surrounding UI.
+      popupMenuTheme: PopupMenuThemeData(
+        color: AppColors.surface,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.sm),
+          side: const BorderSide(color: AppColors.border, width: 1),
+        ),
+        textStyle: const TextStyle(
+          color: AppColors.onSurface,
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      dropdownMenuTheme: DropdownMenuThemeData(
+        textStyle: const TextStyle(
+          color: AppColors.onSurface,
+          fontSize: 14,
+          fontWeight: FontWeight.w700,
+        ),
+        menuStyle: MenuStyle(
+          backgroundColor: WidgetStateProperty.all(AppColors.surface),
+          surfaceTintColor: WidgetStateProperty.all(Colors.transparent),
+          elevation: WidgetStateProperty.all(0),
+          shape: WidgetStateProperty.all(
+            RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppRadius.sm),
+              side: const BorderSide(color: AppColors.border, width: 1),
+            ),
+          ),
+          padding: WidgetStateProperty.all(
+            const EdgeInsets.symmetric(vertical: 4),
+          ),
+        ),
+      ),
+      menuTheme: MenuThemeData(
+        style: MenuStyle(
+          backgroundColor: WidgetStateProperty.all(AppColors.surface),
+          surfaceTintColor: WidgetStateProperty.all(Colors.transparent),
+          elevation: WidgetStateProperty.all(0),
+          shape: WidgetStateProperty.all(
+            RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppRadius.sm),
+              side: const BorderSide(color: AppColors.border, width: 1),
+            ),
+          ),
+        ),
+      ),
       textTheme: base.textTheme.apply(
         bodyColor: AppColors.onSurface,
         displayColor: AppColors.onSurface,
@@ -207,45 +269,7 @@ class AppTheme {
   }
 }
 
-/// Reusable gradient app bar
-class GradientAppBar extends StatelessWidget implements PreferredSizeWidget {
-  final String title;
-  final List<Widget>? actions;
-  final Widget? leading;
-  final bool showBack;
-
-  const GradientAppBar({
-    super.key,
-    required this.title,
-    this.actions,
-    this.leading,
-    this.showBack = true,
-  });
-
-  @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight + 12);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: AppColors.heroGradient,
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(AppRadius.lg),
-          bottomRight: Radius.circular(AppRadius.lg),
-        ),
-      ),
-      child: AppBar(
-        title: Text(title),
-        leading: leading,
-        automaticallyImplyLeading: showBack,
-        actions: actions,
-      ),
-    );
-  }
-}
-
-/// Modern card container
+/// Modern card container — flat with subtle border
 class GlassCard extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry padding;
@@ -256,7 +280,7 @@ class GlassCard extends StatelessWidget {
   const GlassCard({
     super.key,
     required this.child,
-    this.padding = const EdgeInsets.all(18),
+    this.padding = const EdgeInsets.all(16),
     this.margin = EdgeInsets.zero,
     this.onTap,
     this.color,
@@ -268,9 +292,8 @@ class GlassCard extends StatelessWidget {
       margin: margin,
       decoration: BoxDecoration(
         color: color ?? AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.lg),
+        borderRadius: BorderRadius.circular(AppRadius.md),
         border: Border.all(color: AppColors.border),
-        boxShadow: AppShadows.card,
       ),
       padding: padding,
       child: child,
@@ -279,7 +302,7 @@ class GlassCard extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(AppRadius.lg),
+        borderRadius: BorderRadius.circular(AppRadius.md),
         onTap: onTap,
         child: card,
       ),
@@ -287,7 +310,7 @@ class GlassCard extends StatelessWidget {
   }
 }
 
-/// Primary gradient button
+/// Primary flat button — Jisr style (no gradient)
 class PrimaryButton extends StatelessWidget {
   final String label;
   final VoidCallback? onPressed;
@@ -308,12 +331,10 @@ class PrimaryButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final enabled = onPressed != null && !loading;
     final child = Container(
-      height: 52,
+      height: 48,
       decoration: BoxDecoration(
-        gradient: enabled ? AppColors.primaryGradient : null,
-        color: enabled ? null : AppColors.muted.withOpacity(0.3),
+        color: enabled ? AppColors.primary : AppColors.muted.withOpacity(0.3),
         borderRadius: BorderRadius.circular(AppRadius.sm),
-        boxShadow: enabled ? AppShadows.pop : null,
       ),
       alignment: Alignment.center,
       child: loading
@@ -337,9 +358,9 @@ class PrimaryButton extends StatelessWidget {
                   label,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 15.5,
-                    letterSpacing: 0.3,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                    letterSpacing: 0.2,
                   ),
                 ),
               ],
@@ -436,8 +457,8 @@ class SectionHeader extends StatelessWidget {
     return Row(
       children: [
         if (icon != null) ...[
-          Icon(icon, color: AppColors.primary, size: 22),
-          const SizedBox(width: 10),
+          Icon(icon, color: AppColors.primary, size: 20),
+          const SizedBox(width: 8),
         ],
         Expanded(
           child: Column(
@@ -446,10 +467,10 @@ class SectionHeader extends StatelessWidget {
               Text(
                 title,
                 style: const TextStyle(
-                  fontSize: 19,
-                  fontWeight: FontWeight.w800,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
                   color: AppColors.onSurface,
-                  letterSpacing: 0.2,
+                  letterSpacing: 0.1,
                 ),
               ),
               if (subtitle != null)

@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-import 'DioClient.dart';
+import 'dio_client.dart';
 import 'l10n/app_localizations.dart';
 import 'theme.dart';
 // ignore: unused_import
 import 'widgets.dart';
 
+/// Profile screen — avatar, identity, vacation balance, and a
+/// tap-to-reveal financial card (salary / bank / IBAN, masked by default).
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
@@ -97,27 +99,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         child: Column(
                           children: [
                             Container(
-                              width: 84,
-                              height: 84,
+                              width: 76,
+                              height: 76,
                               decoration: BoxDecoration(
-                                gradient: AppColors.heroGradient,
+                                color: AppColors.primary.withOpacity(0.10),
                                 shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppColors.primary
-                                        .withOpacity(0.35),
-                                    blurRadius: 20,
-                                    offset: const Offset(0, 8),
-                                  ),
-                                ],
                               ),
                               alignment: Alignment.center,
                               child: Text(
                                 initials,
                                 style: const TextStyle(
-                                  fontSize: 32,
-                                  fontWeight: FontWeight.w900,
-                                  color: Colors.white,
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.primary,
                                 ),
                               ),
                             ),

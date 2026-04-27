@@ -105,12 +105,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get veriy => 'تأكيد';
 
   @override
-  String get selectrange =>
-      'يُرجى تحديد تاريخ بداية الإجازة وتاريخ نهايتها';
+  String get selectrange => 'يُرجى تحديد تاريخ بداية الإجازة وتاريخ نهايتها';
 
   @override
-  String get notoday =>
-      'لا يمكن تقديم طلب إجازة لليوم الحالي أو لتاريخ سابق';
+  String get notoday => 'لا يمكن تقديم طلب إجازة لليوم الحالي أو لتاريخ سابق';
 
   @override
   String get invalidfile => 'يُرجى إرفاق ملف صالح';
@@ -119,23 +117,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String get nobalance => 'رصيد الإجازات غير كافٍ';
 
   @override
-  String get minimum5 =>
-      'الحد الأدنى لطلب الإجازة الخارجية هو خمسة أيام';
+  String get minimum5 => 'الحد الأدنى لطلب الإجازة الخارجية هو خمسة أيام';
 
   @override
-  String get morahalavac =>
-      'عذراً، هذا الموظف لديه إجازة مُرحَّلة حالياً';
+  String get morahalavac => 'عذراً، هذا الموظف لديه إجازة مُرحَّلة حالياً';
 
   @override
-  String get iqamaend =>
-      'عذراً، تاريخ العودة من الإجازة يتجاوز تاريخ انتهاء الإقامة';
+  String get iqamaend => 'عذراً، تاريخ العودة من الإجازة يتجاوز تاريخ انتهاء الإقامة';
 
   @override
   String get third => 'الربع الثالث من السنة';
 
   @override
-  String get noaccepttoday =>
-      'لا يمكن اعتماد طلب إجازة لليوم الحالي أو لتاريخ سابق';
+  String get noaccepttoday => 'لا يمكن اعتماد طلب إجازة لليوم الحالي أو لتاريخ سابق';
 
   @override
   String get fourth => 'الربع الرابع من السنة';
@@ -150,8 +144,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get addsal => 'الراتب الإضافي';
 
   @override
-  String get notovac =>
-      'لا يمكن تقديم طلبَي إجازة متداخلَين في الفترة ذاتها';
+  String get notovac => 'لا يمكن تقديم طلبَي إجازة متداخلَين في الفترة ذاتها';
 
   @override
   String get transport => 'بدل الانتقال';
@@ -229,8 +222,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get vactype => 'نوع الإجازة';
 
   @override
-  String get enteriqama =>
-      'يُرجى إدخال رقم الهوية الوطنية أو الإقامة';
+  String get enteriqama => 'يُرجى إدخال رقم الهوية الوطنية أو الإقامة';
 
   @override
   String get iqama => 'رقم الهوية الوطنية / الإقامة';
@@ -342,4 +334,111 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get year => 'يُرجى اختيار السنة المطلوبة للتقييم';
+
+  @override
+  String get attendanceLog => 'سجل الحضور';
+
+  @override
+  String get attendanceSubtitle => 'سجلات بصمتك اليومية';
+
+  @override
+  String get checkIn => 'الحضور';
+
+  @override
+  String get checkOut => 'الانصراف';
+
+  @override
+  String get noCheckIn => 'لا يوجد تسجيل حضور';
+
+  @override
+  String get noCheckOut => 'لا يوجد تسجيل انصراف';
+
+  @override
+  String get viewAll => 'عرض الكل';
+
+  @override
+  String get allRecords => 'جميع السجلات';
+
+  @override
+  String get month => 'الشهر';
+
+  @override
+  String get filterYear => 'السنة';
+
+  @override
+  String get noAttendance => 'لا توجد سجلات حضور لهذا الشهر';
+
+  @override
+  String get salaryDetails => 'تفاصيل الراتب';
+
+  @override
+  String get salarySubtitle => 'البيان الشهري الكامل';
+
+  @override
+  String get netSalary => 'صافي الراتب';
+
+  @override
+  String get allowances => 'البدلات';
+
+  @override
+  String get deductions => 'الاستقطاعات';
+
+  @override
+  String get total => 'الإجمالي';
+
+  @override
+  String get totalAllowances => 'إجمالي البدلات';
+
+  @override
+  String get totalDeductions => 'إجمالي الاستقطاعات';
+
+  @override
+  String get noSalaryData => 'تفاصيل الراتب غير متاحة حالياً';
+
+  @override
+  String get digitalCard => 'البطاقة الرقمية';
+
+  @override
+  String get digitalCardSubtitle => 'بطاقتك التعريفية الرقمية';
+
+  @override
+  String get shareCard => 'مشاركة البطاقة';
+
+  @override
+  String get noCardData => 'تعذّر تحميل بطاقتك حالياً';
+
+  @override
+  String get shareCardFailed => 'تعذّر مشاركة البطاقة';
+
+  @override
+  String get colleagues => 'المدير والزملاء';
+
+  @override
+  String get colleaguesSubtitle => 'مديرك المباشر وزملاؤك في الفريق';
+
+  @override
+  String get directManager => 'المدير المباشر';
+
+  @override
+  String colleaguesCount(int count) {
+    return 'الزملاء ($count)';
+  }
+
+  @override
+  String get noColleagues => 'لا يوجد زملاء آخرون تحت نفس المدير';
+
+  @override
+  String get noManager => 'لا يوجد مدير مباشر مسجَّل';
+
+  @override
+  String get callBtn => 'اتصال';
+
+  @override
+  String get emailBtn => 'بريد';
+
+  @override
+  String get callFailed => 'تعذّر بدء المكالمة';
+
+  @override
+  String get emailFailed => 'تعذّر فتح تطبيق البريد';
 }

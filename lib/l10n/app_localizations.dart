@@ -104,49 +104,49 @@ abstract class AppLocalizations {
   /// No description provided for @login.
   ///
   /// In en, this message translates to:
-  /// **'Login'**
+  /// **'Sign In'**
   String get login;
 
   /// No description provided for @shubra.
   ///
   /// In en, this message translates to:
-  /// **'Shubra Al-Taif'**
+  /// **'Shubra Al-Taif Company'**
   String get shubra;
 
   /// No description provided for @updateinfo.
   ///
   /// In en, this message translates to:
-  /// **'Update Info'**
+  /// **'Update Personal Information'**
   String get updateinfo;
 
   /// No description provided for @requestloan.
   ///
   /// In en, this message translates to:
-  /// **'Request Loan'**
+  /// **'Loan Request'**
   String get requestloan;
 
   /// No description provided for @prevloan.
   ///
   /// In en, this message translates to:
-  /// **'Received Loan Requests'**
+  /// **'Previous Loan Records'**
   String get prevloan;
 
   /// No description provided for @deliveredloan.
   ///
   /// In en, this message translates to:
-  /// **'Loan Requests'**
+  /// **'Received Loans'**
   String get deliveredloan;
 
   /// No description provided for @requestleave.
   ///
   /// In en, this message translates to:
-  /// **'Request Leave'**
+  /// **'Submit Leave Request'**
   String get requestleave;
 
   /// No description provided for @leaverequests.
   ///
   /// In en, this message translates to:
-  /// **'Leave Requests'**
+  /// **'Leave Records'**
   String get leaverequests;
 
   /// No description provided for @loanrequests.
@@ -158,19 +158,19 @@ abstract class AppLocalizations {
   /// No description provided for @complaint.
   ///
   /// In en, this message translates to:
-  /// **'Suggestion / Complaint'**
+  /// **'Submit a Suggestion or Complaint'**
   String get complaint;
 
   /// No description provided for @moves.
   ///
   /// In en, this message translates to:
-  /// **'Movements'**
+  /// **'Monthly Transactions'**
   String get moves;
 
   /// No description provided for @leave.
   ///
   /// In en, this message translates to:
-  /// **'request Leave'**
+  /// **'Leave Request'**
   String get leave;
 
   /// No description provided for @custody.
@@ -182,31 +182,31 @@ abstract class AppLocalizations {
   /// No description provided for @rate.
   ///
   /// In en, this message translates to:
-  /// **'Rating'**
+  /// **'Annual Performance Review'**
   String get rate;
 
   /// No description provided for @logout.
   ///
   /// In en, this message translates to:
-  /// **'Logout'**
+  /// **'Sign Out'**
   String get logout;
 
   /// No description provided for @myinfo.
   ///
   /// In en, this message translates to:
-  /// **'Your Personal Info'**
+  /// **'Personal Information'**
   String get myinfo;
 
   /// No description provided for @name.
   ///
   /// In en, this message translates to:
-  /// **'Name'**
+  /// **'Full Name'**
   String get name;
 
   /// No description provided for @empcode.
   ///
   /// In en, this message translates to:
-  /// **'Employee Code'**
+  /// **'Employee ID'**
   String get empcode;
 
   /// No description provided for @mobile.
@@ -218,13 +218,13 @@ abstract class AppLocalizations {
   /// No description provided for @manager.
   ///
   /// In en, this message translates to:
-  /// **'Management'**
+  /// **'Direct Manager'**
   String get manager;
 
   /// No description provided for @addnoti.
   ///
   /// In en, this message translates to:
-  /// **'Add Notifications to Employees'**
+  /// **'Send Notification to Employees'**
   String get addnoti;
 
   /// No description provided for @notifications.
@@ -254,7 +254,7 @@ abstract class AppLocalizations {
   /// No description provided for @vacbal.
   ///
   /// In en, this message translates to:
-  /// **'Vacation balance'**
+  /// **'Leave Balance'**
   String get vacbal;
 
   /// No description provided for @addedays.
@@ -266,13 +266,13 @@ abstract class AppLocalizations {
   /// No description provided for @otp.
   ///
   /// In en, this message translates to:
-  /// **'OTP'**
+  /// **'Two-Factor Authentication Code'**
   String get otp;
 
   /// No description provided for @resendotp.
   ///
   /// In en, this message translates to:
-  /// **'Resend OTP in'**
+  /// **'Resend code in'**
   String get resendotp;
 
   /// No description provided for @cancel.
@@ -290,43 +290,43 @@ abstract class AppLocalizations {
   /// No description provided for @selectrange.
   ///
   /// In en, this message translates to:
-  /// **'Please select vacation date and end date'**
+  /// **'Please select the leave start and end dates'**
   String get selectrange;
 
   /// No description provided for @notoday.
   ///
   /// In en, this message translates to:
-  /// **'You cannot request leave for today or a previous day'**
+  /// **'Leave cannot be requested for today or a previous date'**
   String get notoday;
 
   /// No description provided for @invalidfile.
   ///
   /// In en, this message translates to:
-  /// **'Please attach an image'**
+  /// **'Please attach a valid file'**
   String get invalidfile;
 
   /// No description provided for @nobalance.
   ///
   /// In en, this message translates to:
-  /// **'Your vacation balance is insufficient'**
+  /// **'Insufficient leave balance'**
   String get nobalance;
 
   /// No description provided for @minimum5.
   ///
   /// In en, this message translates to:
-  /// **'Minumum Days for this type is 5'**
+  /// **'The minimum duration for an external leave is five days'**
   String get minimum5;
 
   /// No description provided for @morahalavac.
   ///
   /// In en, this message translates to:
-  /// **'This Emp has active vacation'**
+  /// **'This employee already has an active transferred leave'**
   String get morahalavac;
 
   /// No description provided for @iqamaend.
   ///
   /// In en, this message translates to:
-  /// **'Sorry , Return date is bigger than Iqama Date'**
+  /// **'The return date exceeds the Iqama expiry date'**
   String get iqamaend;
 
   /// No description provided for @third.
@@ -338,7 +338,7 @@ abstract class AppLocalizations {
   /// No description provided for @noaccepttoday.
   ///
   /// In en, this message translates to:
-  /// **'You cannot accept leave for today or previous date'**
+  /// **'Leave cannot be approved for today or a previous date'**
   String get noaccepttoday;
 
   /// No description provided for @fourth.
@@ -356,7 +356,7 @@ abstract class AppLocalizations {
   /// No description provided for @basicsal.
   ///
   /// In en, this message translates to:
-  /// **'Salary'**
+  /// **'Basic Salary'**
   String get basicsal;
 
   /// No description provided for @addsal.
@@ -368,7 +368,7 @@ abstract class AppLocalizations {
   /// No description provided for @notovac.
   ///
   /// In en, this message translates to:
-  /// **'You cannot request two leaved in same period'**
+  /// **'Two overlapping leave requests cannot be submitted for the same period'**
   String get notovac;
 
   /// No description provided for @transport.
@@ -386,19 +386,19 @@ abstract class AppLocalizations {
   /// No description provided for @insurance.
   ///
   /// In en, this message translates to:
-  /// **'Insurance'**
+  /// **'Medical Insurance'**
   String get insurance;
 
   /// No description provided for @iban.
   ///
   /// In en, this message translates to:
-  /// **'IBAN Number'**
+  /// **'IBAN'**
   String get iban;
 
   /// No description provided for @compreg.
   ///
   /// In en, this message translates to:
-  /// **'Suggestion / Complaint'**
+  /// **'Submit a Suggestion or Complaint'**
   String get compreg;
 
   /// No description provided for @compadd.
@@ -410,13 +410,13 @@ abstract class AppLocalizations {
   /// No description provided for @entercompadd.
   ///
   /// In en, this message translates to:
-  /// **'Enter Title'**
+  /// **'Please enter a title'**
   String get entercompadd;
 
   /// No description provided for @entercompdesc.
   ///
   /// In en, this message translates to:
-  /// **'Enter Details'**
+  /// **'Please enter the details'**
   String get entercompdesc;
 
   /// No description provided for @description.
@@ -428,19 +428,19 @@ abstract class AppLocalizations {
   /// No description provided for @sent.
   ///
   /// In en, this message translates to:
-  /// **'Sent Successfully'**
+  /// **'Request submitted successfully'**
   String get sent;
 
   /// No description provided for @notsent.
   ///
   /// In en, this message translates to:
-  /// **'Failed to Send Request'**
+  /// **'Failed to submit the request'**
   String get notsent;
 
   /// No description provided for @nodata.
   ///
   /// In en, this message translates to:
-  /// **'No Data Available'**
+  /// **'No data available'**
   String get nodata;
 
   /// No description provided for @date.
@@ -452,19 +452,19 @@ abstract class AppLocalizations {
   /// No description provided for @enterempcode.
   ///
   /// In en, this message translates to:
-  /// **'Enter Employee Code'**
+  /// **'Please enter the employee ID'**
   String get enterempcode;
 
   /// No description provided for @movetype.
   ///
   /// In en, this message translates to:
-  /// **'Move Type'**
+  /// **'Transaction Type'**
   String get movetype;
 
   /// No description provided for @code.
   ///
   /// In en, this message translates to:
-  /// **'Code'**
+  /// **'Reference Code'**
   String get code;
 
   /// No description provided for @amount.
@@ -488,25 +488,25 @@ abstract class AppLocalizations {
   /// No description provided for @grdhr.
   ///
   /// In en, this message translates to:
-  /// **'HR Evaluation'**
+  /// **'Human Resources Evaluation'**
   String get grdhr;
 
   /// No description provided for @grdmdm.
   ///
   /// In en, this message translates to:
-  /// **'General Manager Evaluation'**
+  /// **'Direct Manager Evaluation'**
   String get grdmdm;
 
   /// No description provided for @send.
   ///
   /// In en, this message translates to:
-  /// **'Send'**
+  /// **'Submit'**
   String get send;
 
   /// No description provided for @hbd.
   ///
   /// In en, this message translates to:
-  /// **'Happy Birthday'**
+  /// **'Warmest wishes on your birthday,'**
   String get hbd;
 
   /// No description provided for @status.
@@ -518,31 +518,31 @@ abstract class AppLocalizations {
   /// No description provided for @vactype.
   ///
   /// In en, this message translates to:
-  /// **'Vacation Type'**
+  /// **'Leave Type'**
   String get vactype;
 
   /// No description provided for @enteriqama.
   ///
   /// In en, this message translates to:
-  /// **'Please enter National ID / iqama number'**
+  /// **'Please enter the National ID or Iqama number'**
   String get enteriqama;
 
   /// No description provided for @iqama.
   ///
   /// In en, this message translates to:
-  /// **'National ID / Iqama Number'**
+  /// **'National ID / Iqama'**
   String get iqama;
 
   /// No description provided for @totdays.
   ///
   /// In en, this message translates to:
-  /// **'Maximum Vacation days is'**
+  /// **'Maximum allowed days:'**
   String get totdays;
 
   /// No description provided for @nodays.
   ///
   /// In en, this message translates to:
-  /// **'No. of Days'**
+  /// **'Number of Days'**
   String get nodays;
 
   /// No description provided for @leavedate.
@@ -554,13 +554,13 @@ abstract class AppLocalizations {
   /// No description provided for @statusdate.
   ///
   /// In en, this message translates to:
-  /// **'Status Date'**
+  /// **'Decision Date'**
   String get statusdate;
 
   /// No description provided for @newaccountreg.
   ///
   /// In en, this message translates to:
-  /// **'New Account Registeration'**
+  /// **'Create New Account'**
   String get newaccountreg;
 
   /// No description provided for @password.
@@ -572,19 +572,19 @@ abstract class AppLocalizations {
   /// No description provided for @enterpassword.
   ///
   /// In en, this message translates to:
-  /// **'Please Enter Password'**
+  /// **'Please enter your password'**
   String get enterpassword;
 
   /// No description provided for @failednewreg.
   ///
   /// In en, this message translates to:
-  /// **'Failed Registering Account'**
+  /// **'Account creation failed'**
   String get failednewreg;
 
   /// No description provided for @signinmgr.
   ///
   /// In en, this message translates to:
-  /// **'Sign In Manager'**
+  /// **'Manager Sign In'**
   String get signinmgr;
 
   /// No description provided for @register.
@@ -596,49 +596,49 @@ abstract class AppLocalizations {
   /// No description provided for @registermgr.
   ///
   /// In en, this message translates to:
-  /// **'Manager Account Registeration'**
+  /// **'Create Manager Account'**
   String get registermgr;
 
   /// No description provided for @wronginfo.
   ///
   /// In en, this message translates to:
-  /// **'Wrong Information'**
+  /// **'The entered information is incorrect'**
   String get wronginfo;
 
   /// No description provided for @entervactype.
   ///
   /// In en, this message translates to:
-  /// **'Enter vacation type'**
+  /// **'Please select the leave type'**
   String get entervactype;
 
   /// No description provided for @entermobile.
   ///
   /// In en, this message translates to:
-  /// **'Please Enter Mobile Number'**
+  /// **'Please enter a valid mobile number'**
   String get entermobile;
 
   /// No description provided for @enteremail.
   ///
   /// In en, this message translates to:
-  /// **'Please Enter Valid Email'**
+  /// **'Please enter a valid email address'**
   String get enteremail;
 
   /// No description provided for @email.
   ///
   /// In en, this message translates to:
-  /// **'Email'**
+  /// **'Email Address'**
   String get email;
 
   /// No description provided for @accept.
   ///
   /// In en, this message translates to:
-  /// **'Accept'**
+  /// **'Approve'**
   String get accept;
 
   /// No description provided for @refuse.
   ///
   /// In en, this message translates to:
-  /// **'Refuse'**
+  /// **'Reject'**
   String get refuse;
 
   /// No description provided for @invac.
@@ -668,7 +668,7 @@ abstract class AppLocalizations {
   /// No description provided for @childvac.
   ///
   /// In en, this message translates to:
-  /// **'Newborn Leave'**
+  /// **'Maternity Leave'**
   String get childvac;
 
   /// No description provided for @hajjvac.
@@ -680,25 +680,25 @@ abstract class AppLocalizations {
   /// No description provided for @accepted.
   ///
   /// In en, this message translates to:
-  /// **'Accepted'**
+  /// **'Approved'**
   String get accepted;
 
   /// No description provided for @refused.
   ///
   /// In en, this message translates to:
-  /// **'Refused'**
+  /// **'Rejected'**
   String get refused;
 
   /// No description provided for @pending.
   ///
   /// In en, this message translates to:
-  /// **'Pending'**
+  /// **'Under Review'**
   String get pending;
 
   /// No description provided for @enterdate.
   ///
   /// In en, this message translates to:
-  /// **'Enter Date'**
+  /// **'Please select a date'**
   String get enterdate;
 
   /// No description provided for @notes.
@@ -710,44 +710,254 @@ abstract class AppLocalizations {
   /// No description provided for @attach.
   ///
   /// In en, this message translates to:
-  /// **'Attachement'**
+  /// **'Attach File'**
   String get attach;
 
   /// No description provided for @enternodays.
   ///
   /// In en, this message translates to:
-  /// **'Enter No. of Days'**
+  /// **'Please enter the number of days'**
   String get enternodays;
 
   /// No description provided for @enternote.
   ///
   /// In en, this message translates to:
-  /// **'Please Enter Note'**
+  /// **'Please enter a note'**
   String get enternote;
 
   /// No description provided for @enteramount.
   ///
   /// In en, this message translates to:
-  /// **'Please Enter Amount'**
+  /// **'Please enter the amount'**
   String get enteramount;
 
   /// No description provided for @paid.
   ///
   /// In en, this message translates to:
-  /// **'Paid'**
+  /// **'Amount Paid'**
   String get paid;
 
   /// No description provided for @internet.
   ///
   /// In en, this message translates to:
-  /// **'Connecting'**
+  /// **'Connecting to the server'**
   String get internet;
 
   /// No description provided for @year.
   ///
   /// In en, this message translates to:
-  /// **'Please Enter Year'**
+  /// **'Please select the evaluation year'**
   String get year;
+
+  /// No description provided for @attendanceLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Attendance Log'**
+  String get attendanceLog;
+
+  /// No description provided for @attendanceSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your daily fingerprint records'**
+  String get attendanceSubtitle;
+
+  /// No description provided for @checkIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Clock In'**
+  String get checkIn;
+
+  /// No description provided for @checkOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Clock Out'**
+  String get checkOut;
+
+  /// No description provided for @noCheckIn.
+  ///
+  /// In en, this message translates to:
+  /// **'No check-in'**
+  String get noCheckIn;
+
+  /// No description provided for @noCheckOut.
+  ///
+  /// In en, this message translates to:
+  /// **'No check-out'**
+  String get noCheckOut;
+
+  /// No description provided for @viewAll.
+  ///
+  /// In en, this message translates to:
+  /// **'View All'**
+  String get viewAll;
+
+  /// No description provided for @allRecords.
+  ///
+  /// In en, this message translates to:
+  /// **'All Records'**
+  String get allRecords;
+
+  /// No description provided for @month.
+  ///
+  /// In en, this message translates to:
+  /// **'Month'**
+  String get month;
+
+  /// No description provided for @filterYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Year'**
+  String get filterYear;
+
+  /// No description provided for @noAttendance.
+  ///
+  /// In en, this message translates to:
+  /// **'No attendance records for this month'**
+  String get noAttendance;
+
+  /// No description provided for @salaryDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Salary Details'**
+  String get salaryDetails;
+
+  /// No description provided for @salarySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your full monthly breakdown'**
+  String get salarySubtitle;
+
+  /// No description provided for @netSalary.
+  ///
+  /// In en, this message translates to:
+  /// **'Net Salary'**
+  String get netSalary;
+
+  /// No description provided for @allowances.
+  ///
+  /// In en, this message translates to:
+  /// **'Allowances'**
+  String get allowances;
+
+  /// No description provided for @deductions.
+  ///
+  /// In en, this message translates to:
+  /// **'Deductions'**
+  String get deductions;
+
+  /// No description provided for @total.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get total;
+
+  /// No description provided for @totalAllowances.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Allowances'**
+  String get totalAllowances;
+
+  /// No description provided for @totalDeductions.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Deductions'**
+  String get totalDeductions;
+
+  /// No description provided for @noSalaryData.
+  ///
+  /// In en, this message translates to:
+  /// **'Salary details are not available right now'**
+  String get noSalaryData;
+
+  /// No description provided for @digitalCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Digital Card'**
+  String get digitalCard;
+
+  /// No description provided for @digitalCardSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your digital employee badge'**
+  String get digitalCardSubtitle;
+
+  /// No description provided for @shareCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Share Card'**
+  String get shareCard;
+
+  /// No description provided for @noCardData.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load your card right now'**
+  String get noCardData;
+
+  /// No description provided for @shareCardFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not share the card'**
+  String get shareCardFailed;
+
+  /// No description provided for @colleagues.
+  ///
+  /// In en, this message translates to:
+  /// **'Manager & Colleagues'**
+  String get colleagues;
+
+  /// No description provided for @colleaguesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your direct manager and team'**
+  String get colleaguesSubtitle;
+
+  /// No description provided for @directManager.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct Manager'**
+  String get directManager;
+
+  /// No description provided for @colleaguesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Colleagues ({count})'**
+  String colleaguesCount(int count);
+
+  /// No description provided for @noColleagues.
+  ///
+  /// In en, this message translates to:
+  /// **'You have no colleagues under the same manager'**
+  String get noColleagues;
+
+  /// No description provided for @noManager.
+  ///
+  /// In en, this message translates to:
+  /// **'No direct manager assigned'**
+  String get noManager;
+
+  /// No description provided for @callBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Call'**
+  String get callBtn;
+
+  /// No description provided for @emailBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get emailBtn;
+
+  /// No description provided for @callFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not start the call'**
+  String get callFailed;
+
+  /// No description provided for @emailFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the email app'**
+  String get emailFailed;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

@@ -15,7 +15,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get login => 'Sign In';
 
   @override
-  String get shubra => 'Shubra Al-Taif Group';
+  String get shubra => 'Shubra Al-Taif Company';
 
   @override
   String get updateinfo => 'Update Personal Information';
@@ -105,12 +105,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get veriy => 'Verify';
 
   @override
-  String get selectrange =>
-      'Please select the leave start and end dates';
+  String get selectrange => 'Please select the leave start and end dates';
 
   @override
-  String get notoday =>
-      'Leave cannot be requested for today or a previous date';
+  String get notoday => 'Leave cannot be requested for today or a previous date';
 
   @override
   String get invalidfile => 'Please attach a valid file';
@@ -119,23 +117,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get nobalance => 'Insufficient leave balance';
 
   @override
-  String get minimum5 =>
-      'The minimum duration for an external leave is five days';
+  String get minimum5 => 'The minimum duration for an external leave is five days';
 
   @override
-  String get morahalavac =>
-      'This employee already has an active transferred leave';
+  String get morahalavac => 'This employee already has an active transferred leave';
 
   @override
-  String get iqamaend =>
-      'The return date exceeds the Iqama expiry date';
+  String get iqamaend => 'The return date exceeds the Iqama expiry date';
 
   @override
   String get third => 'Third Quarter';
 
   @override
-  String get noaccepttoday =>
-      'Leave cannot be approved for today or a previous date';
+  String get noaccepttoday => 'Leave cannot be approved for today or a previous date';
 
   @override
   String get fourth => 'Fourth Quarter';
@@ -150,8 +144,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addsal => 'Additional Salary';
 
   @override
-  String get notovac =>
-      'Two overlapping leave requests cannot be submitted for the same period';
+  String get notovac => 'Two overlapping leave requests cannot be submitted for the same period';
 
   @override
   String get transport => 'Transportation Allowance';
@@ -229,8 +222,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get vactype => 'Leave Type';
 
   @override
-  String get enteriqama =>
-      'Please enter the National ID or Iqama number';
+  String get enteriqama => 'Please enter the National ID or Iqama number';
 
   @override
   String get iqama => 'National ID / Iqama';
@@ -341,6 +333,112 @@ class AppLocalizationsEn extends AppLocalizations {
   String get internet => 'Connecting to the server';
 
   @override
-  String get year =>
-      'Please select the evaluation year';
+  String get year => 'Please select the evaluation year';
+
+  @override
+  String get attendanceLog => 'Attendance Log';
+
+  @override
+  String get attendanceSubtitle => 'Your daily fingerprint records';
+
+  @override
+  String get checkIn => 'Clock In';
+
+  @override
+  String get checkOut => 'Clock Out';
+
+  @override
+  String get noCheckIn => 'No check-in';
+
+  @override
+  String get noCheckOut => 'No check-out';
+
+  @override
+  String get viewAll => 'View All';
+
+  @override
+  String get allRecords => 'All Records';
+
+  @override
+  String get month => 'Month';
+
+  @override
+  String get filterYear => 'Year';
+
+  @override
+  String get noAttendance => 'No attendance records for this month';
+
+  @override
+  String get salaryDetails => 'Salary Details';
+
+  @override
+  String get salarySubtitle => 'Your full monthly breakdown';
+
+  @override
+  String get netSalary => 'Net Salary';
+
+  @override
+  String get allowances => 'Allowances';
+
+  @override
+  String get deductions => 'Deductions';
+
+  @override
+  String get total => 'Total';
+
+  @override
+  String get totalAllowances => 'Total Allowances';
+
+  @override
+  String get totalDeductions => 'Total Deductions';
+
+  @override
+  String get noSalaryData => 'Salary details are not available right now';
+
+  @override
+  String get digitalCard => 'Digital Card';
+
+  @override
+  String get digitalCardSubtitle => 'Your digital employee badge';
+
+  @override
+  String get shareCard => 'Share Card';
+
+  @override
+  String get noCardData => 'Unable to load your card right now';
+
+  @override
+  String get shareCardFailed => 'Could not share the card';
+
+  @override
+  String get colleagues => 'Manager & Colleagues';
+
+  @override
+  String get colleaguesSubtitle => 'Your direct manager and team';
+
+  @override
+  String get directManager => 'Direct Manager';
+
+  @override
+  String colleaguesCount(int count) {
+    return 'Colleagues ($count)';
+  }
+
+  @override
+  String get noColleagues => 'You have no colleagues under the same manager';
+
+  @override
+  String get noManager => 'No direct manager assigned';
+
+  @override
+  String get callBtn => 'Call';
+
+  @override
+  String get emailBtn => 'Email';
+
+  @override
+  String get callFailed => 'Could not start the call';
+
+  @override
+  String get emailFailed => 'Could not open the email app';
 }

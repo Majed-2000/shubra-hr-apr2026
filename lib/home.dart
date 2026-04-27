@@ -1,18 +1,21 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shubraepp/main.dart';
-import 'DioClient.dart';
+import 'dio_client.dart';
 import 'l10n/app_localizations.dart';
+import 'shared/utils/logger.dart';
 import 'theme.dart';
 import 'widgets.dart';
 
+/// Employee dashboard — header, balance/stats, quick actions, info card.
 class Home extends StatefulWidget {
   @override
-  _Home createState() => _Home();
+  _HomeState createState() => _HomeState();
 }
 
-class _Home extends State<Home> {
+class _HomeState extends State<Home> {
   final TextEditingController _employeeIdController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final dioClient = DioClient().client;
@@ -22,7 +25,6 @@ class _Home extends State<Home> {
 
   late FirebaseMessaging messaging;
   Map<String, dynamic> empinfo = {};
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   Future<void> _initFCM() async {
     NotificationSettings settings =
@@ -74,7 +76,7 @@ class _Home extends State<Home> {
         });
       }
     } catch (e) {
-      print('Request failed: $e');
+      logD('Request failed: $e');
     }
   }
 
@@ -83,111 +85,117 @@ class _Home extends State<Home> {
     String currentLang = Localizations.localeOf(context).languageCode;
     final t = AppLocalizations.of(context)!;
 
-    return Scaffold(
-      key: _scaffoldKey,
-      backgroundColor: AppColors.bg,
-      extendBodyBehindAppBar: true,
-      drawer: _buildDrawer(context, currentLang, t),
-      body: RefreshIndicator(
-        color: AppColors.primary,
-        onRefresh: getInfo,
-        child: CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(child: _buildHeader(context, t)),
-            if (empinfo.isEmpty)
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: _buildEmptyState(t),
-              )
-            else ...[
-              SliverToBoxAdapter(child: _buildBirthdayAndOccasions(t)),
-              SliverToBoxAdapter(child: _buildQuickActions(t)),
-              SliverToBoxAdapter(child: _buildInfoCard(t)),
-              SliverToBoxAdapter(
-                child: SizedBox(
-                  height: 32 + MediaQuery.of(context).padding.bottom,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
+      ),
+      child: Scaffold(
+        backgroundColor: AppColors.bg,
+        body: RefreshIndicator(
+          color: AppColors.primary,
+          onRefresh: getInfo,
+          child: CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(child: _buildHeader(context, t, currentLang)),
+              if (empinfo.isEmpty)
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: _buildEmptyState(t),
+                )
+              else ...[
+                SliverToBoxAdapter(child: _buildStatsRow(t)),
+                SliverToBoxAdapter(child: _buildBirthdayAndOccasions(t)),
+                SliverToBoxAdapter(child: _buildQuickActions(t)),
+                SliverToBoxAdapter(child: _buildInfoCard(t)),
+                SliverToBoxAdapter(
+                  child: SizedBox(
+                    height: 24 + MediaQuery.of(context).padding.bottom,
+                  ),
                 ),
-              ),
+              ],
             ],
-          ],
+          ),
         ),
+        bottomNavigationBar: _buildBottomNav(context, t),
       ),
     );
   }
 
-  Widget _buildHeader(BuildContext context, AppLocalizations t) {
+  // ─── Clean white header ───────────────────────────��─────────
+  Widget _buildHeader(
+      BuildContext context, AppLocalizations t, String currentLang) {
     final padding = MediaQuery.of(context).padding.top;
     return Container(
-      padding: EdgeInsets.fromLTRB(18, padding + 14, 18, 30),
+      padding: EdgeInsets.fromLTRB(20, padding + 12, 20, 20),
       decoration: const BoxDecoration(
-        gradient: AppColors.heroGradient,
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(30),
-          bottomRight: Radius.circular(30),
+        color: AppColors.surface,
+        border: Border(
+          bottom: BorderSide(color: AppColors.border, width: 1),
         ),
       ),
       child: Column(
         children: [
+          // Top bar: language toggle — logo — notifications
           Row(
             children: [
-              _roundIcon(
-                Icons.menu_rounded,
-                onTap: () => _scaffoldKey.currentState!.openDrawer(),
+              _chipButton(
+                label: currentLang == 'ar' ? 'EN' : 'ع',
+                onTap: () {
+                  var newLocale = currentLang == 'ar' ? 'en' : 'ar';
+                  _storage.write(key: "locale", value: newLocale);
+                  localeNotifier.value = Locale(newLocale);
+                },
               ),
               const Spacer(),
               Text(
                 t.shubra,
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: AppColors.onSurface,
                   fontWeight: FontWeight.w800,
-                  fontSize: 18,
-                  letterSpacing: 0.5,
+                  fontSize: 16,
+                  letterSpacing: 0.3,
                 ),
               ),
               const Spacer(),
-              _roundIcon(
+              _iconBtn(
                 Icons.notifications_outlined,
                 onTap: () =>
                     Navigator.pushNamed(context, "/notifications"),
               ),
             ],
           ),
-          const SizedBox(height: 22),
+          const SizedBox(height: 18),
+          // Greeting row
           Row(
             children: [
               Container(
-                width: 58,
-                height: 58,
+                width: 50,
+                height: 50,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.primary.withOpacity(0.10),
                   shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.15),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
                 ),
                 alignment: Alignment.center,
                 child: Text(
                   username.isNotEmpty ? username[0].toUpperCase() : '?',
                   style: const TextStyle(
                     color: AppColors.primary,
-                    fontWeight: FontWeight.w900,
-                    fontSize: 24,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 20,
                   ),
                 ),
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       t.welcome,
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.85),
+                      style: const TextStyle(
+                        color: AppColors.muted,
                         fontSize: 13,
                       ),
                     ),
@@ -197,13 +205,17 @@ class _Home extends State<Home> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w800,
+                        color: AppColors.onSurface,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ],
                 ),
+              ),
+              _iconBtn(
+                Icons.person_outline_rounded,
+                onTap: () => Navigator.pushNamed(context, "/profile"),
               ),
             ],
           ),
@@ -212,63 +224,164 @@ class _Home extends State<Home> {
     );
   }
 
-  Widget _roundIcon(IconData icon, {required VoidCallback onTap}) {
+  Widget _chipButton({required String label, required VoidCallback onTap}) {
     return Material(
-      color: Colors.white.withOpacity(0.18),
+      color: AppColors.surfaceAlt,
+      borderRadius: BorderRadius.circular(AppRadius.xs),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppRadius.xs),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          child: Text(
+            label,
+            style: const TextStyle(
+              color: AppColors.onSurface,
+              fontWeight: FontWeight.w700,
+              fontSize: 13,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _iconBtn(IconData icon, {required VoidCallback onTap}) {
+    return Material(
+      color: AppColors.surfaceAlt,
       shape: const CircleBorder(),
       child: InkWell(
         customBorder: const CircleBorder(),
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.all(9),
-          child: Icon(icon, color: Colors.white, size: 22),
+          child: Icon(icon, color: AppColors.onSurface, size: 20),
         ),
       ),
     );
   }
 
+  // ─── Stats row ──────────────────────────────────────────────
+  Widget _buildStatsRow(AppLocalizations t) {
+    final info = empinfo['info'] ?? {};
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      child: Row(
+        children: [
+          Expanded(
+            child: _statCard(
+              icon: Icons.beach_access_outlined,
+              label: t.vacbal,
+              value: '${empinfo['vacBal'] ?? '0'}',
+              color: AppColors.primary,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: _statCard(
+              icon: Icons.badge_outlined,
+              label: t.empcode,
+              value: '${info['emcd'] ?? ''}',
+              color: AppColors.secondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _statCard({
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color color,
+  }) {
+    return GlassCard(
+      padding: const EdgeInsets.all(14),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.10),
+              borderRadius: BorderRadius.circular(AppRadius.sm),
+            ),
+            child: Icon(icon, color: color, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(
+                    color: AppColors.muted,
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    color: AppColors.onSurface,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─── Birthday & occasions ───────────────────────────────────
   Widget _buildBirthdayAndOccasions(AppLocalizations t) {
     final hasBd = empinfo['bd'] == true;
     final hasOcc =
         empinfo['occ'] != null && (empinfo['occ'] as List).isNotEmpty;
-    if (!hasBd && !hasOcc) return const SizedBox(height: 18);
+    if (!hasBd && !hasOcc) return const SizedBox.shrink();
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 18, 16, 0),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
       child: Column(
         children: [
           if (hasBd)
             GlassCard(
-              padding: const EdgeInsets.all(16),
-              color: const Color(0xFFFFF6F6),
+              padding: const EdgeInsets.all(14),
+              color: const Color(0xFFF0FAF8),
               child: Column(
                 children: [
                   Row(
                     children: [
                       Container(
-                        width: 44,
-                        height: 44,
+                        width: 40,
+                        height: 40,
                         decoration: BoxDecoration(
                           color: AppColors.primary.withOpacity(0.12),
                           borderRadius:
                               BorderRadius.circular(AppRadius.sm),
                         ),
                         child: const Icon(Icons.cake_outlined,
-                            color: AppColors.primary, size: 24),
+                            color: AppColors.primary, size: 20),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           t.hbd + " " + (empinfo['info']['emnme1'] ?? ''),
                           style: const TextStyle(
-                            fontWeight: FontWeight.w800,
-                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
                             color: AppColors.primary,
                           ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(AppRadius.sm),
                     child: Image.asset(
@@ -280,22 +393,22 @@ class _Home extends State<Home> {
                 ],
               ),
             ),
-          if (hasBd && hasOcc) const SizedBox(height: 12),
+          if (hasBd && hasOcc) const SizedBox(height: 10),
           if (hasOcc)
             GlassCard(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(14),
               child: Column(
                 children: [
                   Text(
                     empinfo['occ'][0]['msg'].toString(),
                     textAlign: TextAlign.center,
                     style: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
                       color: AppColors.primary,
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(AppRadius.sm),
                     child: Image(
@@ -314,6 +427,7 @@ class _Home extends State<Home> {
     );
   }
 
+  // ─── Quick actions ──────────────────────────────────────────
   Widget _buildQuickActions(AppLocalizations t) {
     final actions = [
       _QuickAction(Icons.time_to_leave_outlined, t.requestleave,
@@ -321,23 +435,31 @@ class _Home extends State<Home> {
       _QuickAction(Icons.event_note_outlined, t.leaverequests,
           AppColors.secondary, "/leaveRequests"),
       _QuickAction(Icons.compare_arrows_rounded, t.moves,
-          const Color(0xFF8B5CF6), "/moves"),
+          AppColors.primary, "/moves"),
+      _QuickAction(Icons.fingerprint_rounded, t.attendanceLog,
+          AppColors.success, "/attendance"),
+      _QuickAction(Icons.payments_rounded, t.salaryDetails,
+          AppColors.primary, "/salaryDetails"),
+      _QuickAction(Icons.badge_rounded, t.digitalCard,
+          AppColors.secondary, "/digitalCard"),
+      _QuickAction(Icons.groups_rounded, t.colleagues,
+          AppColors.primary, "/colleagues"),
       _QuickAction(Icons.dashboard_customize_outlined, t.custody,
-          const Color(0xFFF59E0B), "/custody"),
+          AppColors.warning, "/custody"),
       _QuickAction(Icons.star_rate_rounded, t.rate,
-          const Color(0xFF0EA5E9), "/emprate"),
+          AppColors.secondary, "/emprate"),
       _QuickAction(Icons.report_problem_outlined, t.complaint,
           AppColors.danger, "/complaint"),
     ];
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 22, 16, 0),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SectionHeader(
               title: bi(context, ar: "إجراءات سريعة", en: "Quick Actions"),
               icon: Icons.bolt_rounded),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -345,9 +467,9 @@ class _Home extends State<Home> {
             gridDelegate:
                 const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 3,
-              mainAxisSpacing: 10,
-              crossAxisSpacing: 10,
-              childAspectRatio: 0.95,
+              mainAxisSpacing: 8,
+              crossAxisSpacing: 8,
+              childAspectRatio: 1.0,
             ),
             itemBuilder: (_, i) {
               final a = actions[i];
@@ -358,14 +480,14 @@ class _Home extends State<Home> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Container(
-                      width: 42,
-                      height: 42,
+                      width: 40,
+                      height: 40,
                       decoration: BoxDecoration(
-                        color: a.color.withOpacity(0.12),
+                        color: a.color.withOpacity(0.10),
                         borderRadius:
                             BorderRadius.circular(AppRadius.sm),
                       ),
-                      child: Icon(a.icon, color: a.color, size: 22),
+                      child: Icon(a.icon, color: a.color, size: 20),
                     ),
                     const SizedBox(height: 8),
                     Text(
@@ -374,7 +496,7 @@ class _Home extends State<Home> {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        fontSize: 11.5,
+                        fontSize: 11,
                         fontWeight: FontWeight.w600,
                         color: AppColors.onSurface,
                       ),
@@ -389,6 +511,7 @@ class _Home extends State<Home> {
     );
   }
 
+  // ─── Info card ──────────────────────────────────────────────
   Widget _buildInfoCard(AppLocalizations t) {
     final info = empinfo['info'] ?? {};
     final nation = empinfo['nation'];
@@ -401,16 +524,16 @@ class _Home extends State<Home> {
         .trim();
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 22, 16, 0),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SectionHeader(
               title: t.myinfo, icon: Icons.person_outline_rounded),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           GlassCard(
             padding: const EdgeInsets.symmetric(
-                horizontal: 18, vertical: 10),
+                horizontal: 16, vertical: 8),
             child: Column(
               children: [
                 InfoTile(
@@ -438,30 +561,24 @@ class _Home extends State<Home> {
                     icon: Icons.supervisor_account_outlined,
                     label: t.manager,
                     value: '${mgr != null ? mgr['mnnma'] ?? '' : ''}'),
-                const Divider(height: 1, color: AppColors.border),
-                InfoTile(
-                    icon: Icons.beach_access_outlined,
-                    label: t.vacbal,
-                    value: '${empinfo['vacBal'] ?? ''}'),
               ],
             ),
           ),
-          const SizedBox(height: 10),
-          // Private details shortcut — salary, bank, IBAN kept behind this
+          const SizedBox(height: 8),
           GlassCard(
             onTap: () => Navigator.pushNamed(context, "/profile"),
             padding: const EdgeInsets.all(14),
             child: Row(
               children: [
                 Container(
-                  width: 42,
-                  height: 42,
+                  width: 38,
+                  height: 38,
                   decoration: BoxDecoration(
                     color: AppColors.primary.withOpacity(0.10),
                     borderRadius: BorderRadius.circular(AppRadius.sm),
                   ),
                   child: const Icon(Icons.lock_outline_rounded,
-                      color: AppColors.primary, size: 22),
+                      color: AppColors.primary, size: 18),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -473,8 +590,8 @@ class _Home extends State<Home> {
                             ar: "التفاصيل المالية",
                             en: "Financial details"),
                         style: const TextStyle(
-                          fontWeight: FontWeight.w800,
-                          fontSize: 14.5,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
                           color: AppColors.onSurface,
                         ),
                       ),
@@ -486,7 +603,7 @@ class _Home extends State<Home> {
                             en: "Salary, bank & IBAN — hidden for privacy"),
                         style: const TextStyle(
                           color: AppColors.muted,
-                          fontSize: 12,
+                          fontSize: 11.5,
                         ),
                       ),
                     ],
@@ -502,6 +619,7 @@ class _Home extends State<Home> {
     );
   }
 
+  // ─── Empty state ────────────────────────────────────────────
   Widget _buildEmptyState(AppLocalizations t) {
     return Center(
       child: Padding(
@@ -510,16 +628,16 @@ class _Home extends State<Home> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 82,
-              height: 82,
+              width: 72,
+              height: 72,
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.10),
+                color: AppColors.primary.withOpacity(0.08),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.wifi_off_rounded,
-                  color: AppColors.primary, size: 38),
+                  color: AppColors.primary, size: 32),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
             Text(t.internet,
                 textAlign: TextAlign.center,
                 style: const TextStyle(
@@ -532,208 +650,81 @@ class _Home extends State<Home> {
     );
   }
 
-  Drawer _buildDrawer(
-      BuildContext context, String currentLang, AppLocalizations t) {
-    return Drawer(
-      child: Column(
-        children: [
-          Container(
-            padding: EdgeInsets.fromLTRB(
-                20, MediaQuery.of(context).padding.top + 16, 20, 24),
-            decoration: const BoxDecoration(
-              gradient: AppColors.heroGradient,
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(28),
-                bottomRight: Radius.circular(28),
+  // ─── Bottom navigation ──────────────────────────────────────
+  Widget _buildBottomNav(BuildContext context, AppLocalizations t) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColors.surface,
+        border: Border(
+          top: BorderSide(color: AppColors.border, width: 1),
+        ),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _navItem(
+                icon: Icons.home_rounded,
+                label: bi(context, ar: "الرئيسية", en: "Home"),
+                isActive: true,
+                onTap: () {},
               ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 52,
-                      height: 52,
-                      decoration: const BoxDecoration(
-                          color: Colors.white, shape: BoxShape.circle),
-                      alignment: Alignment.center,
-                      child: Text(
-                        username.isNotEmpty
-                            ? username[0].toUpperCase()
-                            : '?',
-                        style: const TextStyle(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w900,
-                          fontSize: 22,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            t.welcome,
-                            style: TextStyle(
-                                color: Colors.white.withOpacity(0.8),
-                                fontSize: 12),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            username,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 17,
-                                fontWeight: FontWeight.w800),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 18),
-                Image.asset("assets/shubra.png",
-                    height: 36, alignment: Alignment.centerLeft),
-              ],
-            ),
+              _navItem(
+                icon: Icons.event_note_outlined,
+                label: t.leaverequests,
+                onTap: () =>
+                    Navigator.pushNamed(context, "/leaveRequests"),
+              ),
+              _navItem(
+                icon: Icons.notifications_outlined,
+                label: t.notifications,
+                onTap: () =>
+                    Navigator.pushNamed(context, "/notifications"),
+              ),
+              _navItem(
+                icon: Icons.settings_outlined,
+                label: bi(context, ar: "الإعدادات", en: "Settings"),
+                onTap: () =>
+                    Navigator.pushNamed(context, "/settings"),
+              ),
+            ],
           ),
-          Expanded(
-            child: ListView(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
-              children: [
-                _drawerItem(
-                  icon: Icons.language,
-                  title: currentLang == 'ar' ? 'English' : 'العربية',
-                  onTap: () {
-                    var newLocale = currentLang == 'ar' ? 'en' : 'ar';
-                    _storage.write(key: "locale", value: newLocale);
-                    localeNotifier.value = Locale(newLocale);
-                    Navigator.pop(context);
-                  },
-                ),
-                _drawerItem(
-                    icon: Icons.person_outline_rounded,
-                    title: t.myinfo,
-                    onTap: () =>
-                        Navigator.pushNamed(context, "/profile")),
-                _drawerItem(
-                    icon: Icons.update,
-                    title: t.updateinfo,
-                    onTap: () =>
-                        Navigator.pushNamed(context, "/updateInfo")),
-                _drawerItem(
-                    icon: Icons.notifications_outlined,
-                    title: t.notifications,
-                    onTap: () =>
-                        Navigator.pushNamed(context, "/notifications")),
-                _drawerItem(
-                    icon: Icons.settings_rounded,
-                    title: bi(context, ar: "الإعدادات", en: "Settings"),
-                    onTap: () =>
-                        Navigator.pushNamed(context, "/settings")),
-                _DrawerSection(label: bi(context, ar: "الطلبات", en: "Requests")),
-                _drawerItem(
-                    icon: Icons.time_to_leave,
-                    title: t.requestleave,
-                    onTap: () =>
-                        Navigator.pushNamed(context, "/requestLeave")),
-                _drawerItem(
-                    icon: Icons.event_note,
-                    title: t.leaverequests,
-                    onTap: () =>
-                        Navigator.pushNamed(context, "/leaveRequests")),
-                _DrawerSection(label: bi(context, ar: "الشركة", en: "Company")),
-                _drawerItem(
-                    icon: Icons.report_problem_outlined,
-                    title: t.complaint,
-                    onTap: () =>
-                        Navigator.pushNamed(context, "/complaint")),
-                _drawerItem(
-                    icon: Icons.compare_arrows_rounded,
-                    title: t.moves,
-                    onTap: () => Navigator.pushNamed(context, "/moves")),
-                _drawerItem(
-                    icon: Icons.dashboard_customize_outlined,
-                    title: t.custody,
-                    onTap: () =>
-                        Navigator.pushNamed(context, "/custody")),
-                _drawerItem(
-                    icon: Icons.star_rate_rounded,
-                    title: t.rate,
-                    onTap: () =>
-                        Navigator.pushNamed(context, "/emprate")),
-                const SizedBox(height: 10),
-                const Divider(color: AppColors.border),
-                const SizedBox(height: 6),
-                _drawerItem(
-                  icon: Icons.logout_rounded,
-                  title: t.logout,
-                  danger: true,
-                  onTap: () async {
-                    final storage = FlutterSecureStorage();
-                    await storage.deleteAll();
-                    Navigator.pushReplacementNamed(context, "/logout");
-                  },
-                ),
-              ],
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _drawerItem({
+  Widget _navItem({
     required IconData icon,
-    required String title,
+    required String label,
+    bool isActive = false,
     required VoidCallback onTap,
-    bool danger = false,
   }) {
-    final color = danger ? AppColors.danger : AppColors.secondary;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 6),
-      child: Material(
-        color: Colors.transparent,
+    final color = isActive ? AppColors.primary : AppColors.muted;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
         borderRadius: BorderRadius.circular(AppRadius.sm),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(AppRadius.sm),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-                horizontal: 12, vertical: 12),
-            child: Row(
-              children: [
-                Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    color: color.withOpacity(0.10),
-                    borderRadius: BorderRadius.circular(AppRadius.xs),
-                  ),
-                  child: Icon(icon, color: color, size: 20),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, color: color, size: 22),
+              const SizedBox(height: 3),
+              Text(
+                label,
+                style: TextStyle(
+                  color: color,
+                  fontSize: 10.5,
+                  fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
                 ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 14.5,
-                      fontWeight: FontWeight.w600,
-                      color: danger
-                          ? AppColors.danger
-                          : AppColors.onSurface,
-                    ),
-                  ),
-                ),
-                Icon(Icons.arrow_forward_ios_rounded,
-                    size: 13, color: AppColors.muted.withOpacity(0.6)),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -758,24 +749,4 @@ class _QuickAction {
   final Color color;
   final String route;
   const _QuickAction(this.icon, this.label, this.color, this.route);
-}
-
-class _DrawerSection extends StatelessWidget {
-  final String label;
-  const _DrawerSection({required this.label, super.key});
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(18, 16, 18, 6),
-      child: Text(
-        label.toUpperCase(),
-        style: const TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w800,
-          color: AppColors.muted,
-          letterSpacing: 1.5,
-        ),
-      ),
-    );
-  }
 }

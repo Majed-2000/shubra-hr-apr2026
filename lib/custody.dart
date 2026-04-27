@@ -1,18 +1,19 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
-import 'DioClient.dart';
+import 'dio_client.dart';
 import 'cust.dart';
 import 'l10n/app_localizations.dart';
 import 'theme.dart';
 import 'widgets.dart';
 
-class custody extends StatefulWidget {
+/// Lists the items currently assigned to the employee with issue dates.
+class Custody extends StatefulWidget {
   @override
-  _custody createState() => _custody();
+  _CustodyState createState() => _CustodyState();
 }
 
-class _custody extends State<custody> {
+class _CustodyState extends State<Custody> {
   final ScrollController _scrollController = ScrollController();
   bool stop = false;
   int _page = 0;
@@ -86,7 +87,7 @@ class _custody extends State<custody> {
                   subtitle: bi(context,
                       ar: "لا توجد عهد مسندة إليك.",
                       en: "No custody items assigned to you."),
-                  accent: const Color(0xFFF59E0B),
+                  accent: AppColors.warning,
                 ),
               ],
             )
@@ -106,13 +107,13 @@ class _custody extends State<custody> {
                           width: 50,
                           height: 50,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFF59E0B).withOpacity(0.12),
+                            color: AppColors.warning.withOpacity(0.12),
                             borderRadius:
                                 BorderRadius.circular(AppRadius.sm),
                           ),
                           child: const Icon(
                             Icons.inventory_2_outlined,
-                            color: Color(0xFFF59E0B),
+                            color: AppColors.warning,
                             size: 26,
                           ),
                         ),

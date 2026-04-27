@@ -7,12 +7,12 @@ plugins {
 
 android {
     namespace = "com.shubra.hr" // ✅ Required for AGP 8+
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.shubra.hr"
         minSdk = flutter.minSdkVersion
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 8
         versionName = "8.0"
     }

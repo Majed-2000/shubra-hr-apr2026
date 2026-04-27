@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'theme.dart';
 
 /// Bilingual string helper — picks Arabic or English based on current locale.
@@ -10,7 +11,7 @@ String bi(BuildContext context, {required String ar, required String en}) {
 bool isArabic(BuildContext context) =>
     Localizations.localeOf(context).languageCode == 'ar';
 
-/// Scaffold with built-in hero gradient header
+/// Clean white scaffold — Jisr style
 class ModernScaffold extends StatelessWidget {
   final String title;
   final String? subtitle;
@@ -34,91 +35,98 @@ class ModernScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final top = MediaQuery.of(context).padding.top;
-    return Scaffold(
-      backgroundColor: AppColors.bg,
-      floatingActionButton: floatingActionButton,
-      body: Column(
-        children: [
-          Container(
-            width: double.infinity,
-            padding: EdgeInsets.fromLTRB(16, top + 12, 16, 22),
-            decoration: const BoxDecoration(
-              gradient: AppColors.heroGradient,
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(28),
-                bottomRight: Radius.circular(28),
-              ),
-            ),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    if (showBack)
-                      _HeaderIcon(
-                        icon: Icons.arrow_back_ios_new_rounded,
-                        onTap: () => Navigator.maybePop(context),
-                      ),
-                    const Spacer(),
-                    if (actions != null) ...actions!,
-                  ],
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
+      ),
+      child: Scaffold(
+        backgroundColor: AppColors.bg,
+        floatingActionButton: floatingActionButton,
+        body: Column(
+          children: [
+            // Clean white header
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.fromLTRB(16, top + 8, 16, 16),
+              decoration: const BoxDecoration(
+                color: AppColors.surface,
+                border: Border(
+                  bottom: BorderSide(color: AppColors.border, width: 1),
                 ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    if (leadingIcon != null) ...[
-                      Container(
-                        width: 46,
-                        height: 46,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.18),
-                          borderRadius:
-                              BorderRadius.circular(AppRadius.sm),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      if (showBack)
+                        _HeaderIcon(
+                          icon: Icons.arrow_back_ios_new_rounded,
+                          onTap: () => Navigator.maybePop(context),
                         ),
-                        child:
-                            Icon(leadingIcon, color: Colors.white, size: 22),
-                      ),
-                      const SizedBox(width: 12),
+                      const Spacer(),
+                      if (actions != null) ...actions!,
                     ],
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            title,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w800,
-                              fontSize: 22,
-                              letterSpacing: 0.3,
-                            ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      if (leadingIcon != null) ...[
+                        Container(
+                          width: 42,
+                          height: 42,
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withOpacity(0.10),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.sm),
                           ),
-                          if (subtitle != null)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 2),
-                              child: Text(
-                                subtitle!,
-                                style: TextStyle(
-                                  color: Colors.white.withOpacity(0.85),
-                                  fontSize: 13,
-                                ),
+                          child:
+                              Icon(leadingIcon, color: AppColors.primary, size: 20),
+                        ),
+                        const SizedBox(width: 12),
+                      ],
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              title,
+                              style: const TextStyle(
+                                color: AppColors.onSurface,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 20,
+                                letterSpacing: 0.1,
                               ),
                             ),
-                        ],
+                            if (subtitle != null)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 2),
+                                child: Text(
+                                  subtitle!,
+                                  style: const TextStyle(
+                                    color: AppColors.muted,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-          Expanded(
-            child: SafeArea(
-              top: false,
-              bottom: true,
-              child: body,
+            Expanded(
+              child: SafeArea(
+                top: false,
+                bottom: true,
+                child: body,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -131,14 +139,14 @@ class _HeaderIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white.withOpacity(0.18),
+      color: AppColors.surfaceAlt,
       shape: const CircleBorder(),
       child: InkWell(
         customBorder: const CircleBorder(),
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.all(9),
-          child: Icon(icon, color: Colors.white, size: 19),
+          child: Icon(icon, color: AppColors.onSurface, size: 18),
         ),
       ),
     );
@@ -177,26 +185,25 @@ class StatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: color.withOpacity(0.35), width: 1),
+        color: color.withOpacity(0.10),
+        borderRadius: BorderRadius.circular(AppRadius.xs),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (icon != null) ...[
             Icon(icon, size: 14, color: color),
-            const SizedBox(width: 5),
+            const SizedBox(width: 4),
           ],
           Text(
             label,
             style: TextStyle(
               color: color,
               fontSize: 12,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.2,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.1,
             ),
           ),
         ],
@@ -231,28 +238,21 @@ class EmptyState extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 88,
-              height: 88,
+              width: 80,
+              height: 80,
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    color.withOpacity(0.18),
-                    color.withOpacity(0.06),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+                color: color.withOpacity(0.08),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, color: color, size: 40),
+              child: Icon(icon, color: color, size: 36),
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 16),
             Text(
               title,
               textAlign: TextAlign.center,
               style: const TextStyle(
-                fontSize: 15.5,
-                fontWeight: FontWeight.w700,
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
                 color: AppColors.onSurface,
               ),
             ),
@@ -291,7 +291,7 @@ class DetailRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = color ?? AppColors.secondary;
+    final c = color ?? AppColors.primary;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
@@ -301,7 +301,7 @@ class DetailRow extends StatelessWidget {
             width: 32,
             height: 32,
             decoration: BoxDecoration(
-              color: c.withOpacity(0.12),
+              color: c.withOpacity(0.10),
               borderRadius: BorderRadius.circular(AppRadius.xs),
             ),
             child: Icon(icon, size: 17, color: c),
@@ -360,9 +360,9 @@ class LabeledField extends StatelessWidget {
         Text(
           label,
           style: const TextStyle(
-            fontSize: 13.5,
-            fontWeight: FontWeight.w700,
-            color: AppColors.onSurface,
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: AppColors.muted,
           ),
         ),
         const SizedBox(height: 8),
@@ -398,10 +398,10 @@ class ListSectionTitle extends StatelessWidget {
             child: Text(
               title,
               style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w800,
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
                 color: AppColors.onSurface,
-                letterSpacing: 0.3,
+                letterSpacing: 0.2,
               ),
             ),
           ),

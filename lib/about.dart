@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'theme.dart';
 import 'widgets.dart';
 
+/// About screen — branding, app version, credits.
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
 
@@ -20,20 +21,18 @@ class AboutScreen extends StatelessWidget {
               padding: const EdgeInsets.all(22),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(AppRadius.xl),
+                borderRadius: BorderRadius.circular(AppRadius.lg),
                 border: Border.all(color: AppColors.border),
-                boxShadow: AppShadows.card,
               ),
               child: Column(
                 children: [
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      gradient: AppColors.heroGradient,
-                      borderRadius: BorderRadius.circular(AppRadius.lg),
-                      boxShadow: AppShadows.pop,
+                      color: AppColors.surfaceAlt,
+                      borderRadius: BorderRadius.circular(AppRadius.md),
                     ),
-                    child: Image.asset("assets/shubra.png", height: 72),
+                    child: Image.asset("assets/shubra.png", height: 64),
                   ),
                   const SizedBox(height: 16),
                   Text(

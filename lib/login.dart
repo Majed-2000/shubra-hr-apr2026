@@ -3,17 +3,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shubraepp/main.dart';
-import 'DioClient.dart';
+import 'dio_client.dart';
 import 'l10n/app_localizations.dart';
+import 'shared/utils/snackbar.dart';
 import 'theme.dart';
 import 'widgets.dart';
 
+/// Employee OTP-based login screen with 120-second resend timer.
 class Login extends StatefulWidget {
   @override
-  _Login createState() => _Login();
+  _LoginState createState() => _LoginState();
 }
 
-class _Login extends State<Login> {
+class _LoginState extends State<Login> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _employeeIdController = TextEditingController();
   final TextEditingController _otpController = TextEditingController();
@@ -84,9 +86,7 @@ class _Login extends State<Login> {
     }
   }
 
-  void _snack(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-  }
+  void _snack(String msg) => SnackbarHelpers.show(context, msg);
 
   void startResendTimer() {
     setState(() {
@@ -145,31 +145,30 @@ class _Login extends State<Login> {
               borderRadius: BorderRadius.circular(AppRadius.lg),
             ),
             child: Padding(
-              padding: const EdgeInsets.all(22),
+              padding: const EdgeInsets.all(24),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
-                    width: 58,
-                    height: 58,
+                    width: 56,
+                    height: 56,
                     decoration: BoxDecoration(
-                      gradient: AppColors.primaryGradient,
+                      color: AppColors.primary.withOpacity(0.10),
                       shape: BoxShape.circle,
-                      boxShadow: AppShadows.pop,
                     ),
                     child: const Icon(Icons.lock_outline_rounded,
-                        color: Colors.white, size: 28),
+                        color: AppColors.primary, size: 26),
                   ),
                   const SizedBox(height: 14),
                   Text(
                     AppLocalizations.of(context)!.otp,
                     style: const TextStyle(
-                      fontSize: 19,
-                      fontWeight: FontWeight.w800,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
                       color: AppColors.onSurface,
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 4),
                   Text(
                     bi(context, ar: "٦ أرقام", en: "6 digits"),
                     style: const TextStyle(
@@ -225,7 +224,7 @@ class _Login extends State<Login> {
                               en:
                                   "Resend in ${_secondsRemaining}s"),
                       style: TextStyle(
-                        fontSize: 13.5,
+                        fontSize: 13,
                         fontWeight: FontWeight.w600,
                         color: _canResend
                             ? AppColors.primary
@@ -257,228 +256,191 @@ class _Login extends State<Login> {
   @override
   Widget build(BuildContext context) {
     String currentLang = Localizations.localeOf(context).languageCode;
-    final size = MediaQuery.of(context).size;
 
-    return Scaffold(
-      body: Stack(
-        children: [
-          Container(
-            height: size.height * 0.45,
-            decoration: const BoxDecoration(gradient: AppColors.heroGradient),
-          ),
-          Positioned.fill(
-            child: IgnorePointer(
-              child: CustomPaint(painter: _BubblePainter()),
-            ),
-          ),
-          SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      _LangChip(
-                        currentLang: currentLang,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
+      ),
+      child: Scaffold(
+        backgroundColor: AppColors.bg,
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+            child: Column(
+              children: [
+                // Language toggle
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Material(
+                      color: AppColors.surfaceAlt,
+                      borderRadius: BorderRadius.circular(AppRadius.xs),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(AppRadius.xs),
                         onTap: () {
                           var newLocale =
                               currentLang == 'ar' ? 'en' : 'ar';
                           _storage.write(key: "locale", value: newLocale);
                           localeNotifier.value = Locale(newLocale);
                         },
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 7),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.language,
+                                  size: 16, color: AppColors.onSurface),
+                              const SizedBox(width: 6),
+                              Text(
+                                currentLang == 'ar' ? 'English' : 'العربية',
+                                style: const TextStyle(
+                                  color: AppColors.onSurface,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                    ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 40),
+                // Logo
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(AppRadius.lg),
+                    border: Border.all(color: AppColors.border),
                   ),
-                  const SizedBox(height: 30),
-                  Container(
-                    padding: const EdgeInsets.all(18),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(AppRadius.xl),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.12),
-                          blurRadius: 20,
-                          offset: const Offset(0, 8),
+                  child: Image.asset("assets/shubra.png", height: 72),
+                ),
+                const SizedBox(height: 24),
+                // Welcome text
+                Text(
+                  bi(context, ar: "مرحبًا بك", en: "Welcome back"),
+                  style: const TextStyle(
+                    color: AppColors.onSurface,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  bi(context,
+                      ar: "سجّل دخولك للمتابعة",
+                      en: "Sign in to continue"),
+                  style: const TextStyle(
+                    color: AppColors.muted,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 32),
+                // Form card
+                GlassCard(
+                  padding: const EdgeInsets.all(20),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          bi(context,
+                              ar: "رقم الموظف", en: "Employee ID"),
+                          style: const TextStyle(
+                            color: AppColors.muted,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextFormField(
+                          controller: _employeeIdController,
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly
+                          ],
+                          decoration: InputDecoration(
+                            hintText: AppLocalizations.of(context)!.empcode,
+                            prefixIcon: const Icon(
+                              Icons.badge_outlined,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                          validator: (value) =>
+                              value == null || value.isEmpty
+                                  ? AppLocalizations.of(context)!
+                                      .enterempcode
+                                  : null,
+                        ),
+                        const SizedBox(height: 20),
+                        PrimaryButton(
+                          label: AppLocalizations.of(context)!.login,
+                          icon: Icons.login_rounded,
+                          loading: _loading,
+                          onPressed: () {
+                            if (_formKey.currentState!.validate()) {
+                              requestOtp();
+                            }
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            const Expanded(
+                                child: Divider(color: AppColors.border)),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12),
+                              child: Text(
+                                  bi(context, ar: "أو", en: "or"),
+                                  style: const TextStyle(
+                                      color: AppColors.muted,
+                                      fontSize: 12)),
+                            ),
+                            const Expanded(
+                                child: Divider(color: AppColors.border)),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            onPressed: () {
+                              Navigator.pushNamed(context, '/loginmgr');
+                            },
+                            icon: const Icon(
+                              Icons.admin_panel_settings_outlined,
+                              color: AppColors.primary,
+                            ),
+                            label: Text(
+                              AppLocalizations.of(context)!.signinmgr,
+                              style: const TextStyle(
+                                  color: AppColors.primary),
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(
+                                  color: AppColors.primary, width: 1.2),
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 14),
+                            ),
+                          ),
                         ),
                       ],
                     ),
-                    child: Image.asset("assets/shubra.png", height: 88),
                   ),
-                  const SizedBox(height: 18),
-                  const Text(
-                    "Welcome back",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 22,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.4,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    "Sign in to continue",
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.85),
-                      fontSize: 13.5,
-                      letterSpacing: 0.2,
-                    ),
-                  ),
-                  const SizedBox(height: 34),
-                  GlassCard(
-                    padding: const EdgeInsets.all(22),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            bi(context,
-                                ar: "رقم الموظف",
-                                en: "Employee ID"),
-                            style: const TextStyle(
-                              color: AppColors.onSurface,
-                              fontSize: 13.5,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          TextFormField(
-                            controller: _employeeIdController,
-                            keyboardType: TextInputType.number,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly
-                            ],
-                            decoration: InputDecoration(
-                              hintText: AppLocalizations.of(context)!.empcode,
-                              prefixIcon: const Icon(
-                                Icons.badge_outlined,
-                                color: AppColors.primary,
-                              ),
-                            ),
-                            validator: (value) =>
-                                value == null || value.isEmpty
-                                    ? AppLocalizations.of(context)!
-                                        .enterempcode
-                                    : null,
-                          ),
-                          const SizedBox(height: 22),
-                          PrimaryButton(
-                            label: AppLocalizations.of(context)!.login,
-                            icon: Icons.login_rounded,
-                            loading: _loading,
-                            onPressed: () {
-                              if (_formKey.currentState!.validate()) {
-                                requestOtp();
-                              }
-                            },
-                          ),
-                          const SizedBox(height: 14),
-                          Row(
-                            children: [
-                              const Expanded(
-                                  child: Divider(color: AppColors.border)),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 10),
-                                child: Text(
-                                    bi(context, ar: "أو", en: "or"),
-                                    style: const TextStyle(
-                                        color: AppColors.muted,
-                                        fontSize: 12)),
-                              ),
-                              const Expanded(
-                                  child: Divider(color: AppColors.border)),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          SizedBox(
-                            width: double.infinity,
-                            child: OutlinedButton.icon(
-                              onPressed: () {
-                                Navigator.pushNamed(context, '/loginmgr');
-                              },
-                              icon: const Icon(
-                                Icons.admin_panel_settings_outlined,
-                                color: AppColors.secondary,
-                              ),
-                              label: Text(
-                                AppLocalizations.of(context)!.signinmgr,
-                                style: const TextStyle(
-                                    color: AppColors.secondary),
-                              ),
-                              style: OutlinedButton.styleFrom(
-                                side: const BorderSide(
-                                    color: AppColors.secondary, width: 1.4),
-                                padding: const EdgeInsets.symmetric(
-                                    vertical: 14),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _LangChip extends StatelessWidget {
-  final String currentLang;
-  final VoidCallback onTap;
-  const _LangChip({required this.currentLang, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white.withOpacity(0.18),
-      borderRadius: BorderRadius.circular(30),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(30),
-        onTap: onTap,
-        child: Padding(
-          padding:
-              const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.language, size: 17, color: Colors.white),
-              const SizedBox(width: 6),
-              Text(
-                currentLang == 'ar' ? 'English' : 'العربية',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 13,
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
   }
-}
-
-class _BubblePainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final p1 = Paint()..color = Colors.white.withOpacity(0.08);
-    final p2 = Paint()..color = Colors.white.withOpacity(0.05);
-    canvas.drawCircle(Offset(size.width * 0.85, size.height * 0.08), 70, p1);
-    canvas.drawCircle(
-        Offset(size.width * 0.15, size.height * 0.32), 50, p2);
-    canvas.drawCircle(
-        Offset(size.width * 0.95, size.height * 0.38), 30, p2);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
