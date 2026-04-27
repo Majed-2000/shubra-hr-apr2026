@@ -33,16 +33,17 @@ class DeviceFingerprint {
       String os = '';
       if (Platform.isAndroid) {
         final a = await info.androidInfo;
-        // a.name is Settings.Global.DEVICE_NAME — on stock Samsung this is
-        // the marketing name ("Galaxy S26 Ultra"). Falls back to the SKU
-        // form ("samsung SM-S938B") if the user cleared/changed it.
-        final friendly = a.name.trim();
-        device = friendly.isNotEmpty
-            ? friendly
-            : '${a.manufacturer} ${a.model}'.trim();
+        // Use Latin-only fields. We deliberately do NOT use a.name
+        // (Settings.Global.DEVICE_NAME) because it's user-editable and may
+        // contain Arabic/emoji — non-ASCII bytes in HTTP header values
+        // make dart:io's HttpClient throw before the request goes out.
+        device = '${a.manufacturer} ${a.model}'.trim();
         os = 'Android ${a.version.release}';
       } else if (Platform.isIOS) {
         final i = await info.iosInfo;
+        // utsname.machine is the hardware identifier ("iPhone16,1") —
+        // always ASCII. i.name (user-editable) is intentionally avoided
+        // for the same reason as Android above.
         device = i.utsname.machine;
         if (device.isEmpty) device = i.model;
         os = '${i.systemName} ${i.systemVersion}';
@@ -51,9 +52,16 @@ class DeviceFingerprint {
         os = Platform.operatingSystemVersion;
       }
 
+      // Defense-in-depth: replace anything outside printable ASCII so a
+      // surprise non-Latin character in any field can't poison the header.
+      String asciiOnly(String s) =>
+          s.replaceAll(RegExp(r'[^\x20-\x7E]'), '?').trim();
+      device = asciiOnly(device);
+      os = asciiOnly(os);
+
       _platformLabel = os;
       _deviceLabel = device;
-      _userAgent = 'Shubra/$appVersion ($device; $os)';
+      _userAgent = asciiOnly('Shubra/$appVersion ($device; $os)');
     } catch (e) {
       logD('DeviceFingerprint init failed: $e');
       // Leave defaults; UA stays "Shubra" so backend at least sees a tag.

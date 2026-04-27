@@ -72,13 +72,23 @@ String parseDioError(Object e, {required bool isArabic}) {
       break;
   }
 
-  // 4. Last resort — raw exception message (sometimes useful, sometimes
-  // a long stack trace). Trim aggressively.
+  // 4. Last resort — surface *something* concrete from the exception so
+  // failures aren't invisible. Pull the first usable line and truncate.
   final raw = e.message?.trim();
+  final typeLabel = e.type.name; // "unknown", "badResponse", etc.
   if (raw != null && raw.isNotEmpty) {
-    final firstLine = raw.split('\n').first.trim();
-    if (firstLine.length <= 200) return firstLine;
+    final firstLine = raw
+        .split('\n')
+        .map((l) => l.trim())
+        .firstWhere((l) => l.isNotEmpty, orElse: () => raw);
+    final compact =
+        firstLine.length > 140 ? '${firstLine.substring(0, 140)}…' : firstLine;
+    return isArabic
+        ? 'خطأ ($typeLabel): $compact'
+        : 'Error ($typeLabel): $compact';
   }
 
-  return isArabic ? 'خطأ في الشبكة' : 'Network error';
+  return isArabic
+      ? 'خطأ في الشبكة ($typeLabel)'
+      : 'Network error ($typeLabel)';
 }
