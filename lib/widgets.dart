@@ -440,3 +440,79 @@ class Loader extends StatelessWidget {
     );
   }
 }
+
+/// Animated shimmer placeholder used while real content is fetching.
+///
+/// Pulses between two surface tones — no external package, no shader,
+/// just a [ColorTween] driven by an [AnimationController] so the cost
+/// is one rebuild per frame regardless of how many [Skeleton]s are on
+/// screen.
+class Skeleton extends StatefulWidget {
+  final double? width;
+  final double height;
+  final double radius;
+  final EdgeInsetsGeometry margin;
+
+  const Skeleton({
+    super.key,
+    this.width,
+    this.height = 14,
+    this.radius = 8,
+    this.margin = EdgeInsets.zero,
+  });
+
+  /// Convenience for square/circle avatar placeholders.
+  const Skeleton.box({
+    super.key,
+    required double size,
+    this.radius = 12,
+    this.margin = EdgeInsets.zero,
+  })  : width = size,
+        height = size;
+
+  @override
+  State<Skeleton> createState() => _SkeletonState();
+}
+
+class _SkeletonState extends State<Skeleton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1100),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _ctrl,
+      builder: (_, __) {
+        final color = Color.lerp(
+          AppColors.surfaceAlt,
+          AppColors.border,
+          _ctrl.value,
+        );
+        return Container(
+          width: widget.width,
+          height: widget.height,
+          margin: widget.margin,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(widget.radius),
+          ),
+        );
+      },
+    );
+  }
+}

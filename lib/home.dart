@@ -23,6 +23,7 @@ class _HomeState extends State<Home> {
   final _storage = const FlutterSecureStorage();
   String username = "";
   bool isManager = false;
+  bool _loadFailed = false;
 
   late FirebaseMessaging messaging;
   Map<String, dynamic> empinfo = {};
@@ -84,12 +85,16 @@ class _HomeState extends State<Home> {
             setState(() => isManager = freshFlag);
           }
         }
+        if (!mounted) return;
         setState(() {
           empinfo = data;
+          _loadFailed = false;
         });
       }
     } catch (e) {
-      logD('Request failed: $e');
+      logD('Home /myinfoview failed: $e');
+      if (!mounted) return;
+      setState(() => _loadFailed = true);
     }
   }
 
@@ -112,12 +117,15 @@ class _HomeState extends State<Home> {
           child: CustomScrollView(
             slivers: [
               SliverToBoxAdapter(child: _buildHeader(context, t, currentLang)),
-              if (empinfo.isEmpty)
-                SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: _buildEmptyState(t),
-                )
-              else ...[
+              if (empinfo.isEmpty) ...[
+                if (_loadFailed)
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: _buildEmptyState(t),
+                  )
+                else
+                  SliverToBoxAdapter(child: _buildSkeleton(context)),
+              ] else ...[
                 SliverToBoxAdapter(child: _buildStatsRow(t)),
                 SliverToBoxAdapter(child: _buildBirthdayAndOccasions(t)),
                 SliverToBoxAdapter(child: _buildQuickActions(t)),
@@ -697,6 +705,120 @@ class _HomeState extends State<Home> {
                     fontWeight: FontWeight.w600)),
           ],
         ),
+      ),
+    );
+  }
+
+  // ─── Skeleton placeholder (first-load shimmer) ──────────────
+  Widget _buildSkeleton(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Stats row — 2 cards side by side
+          Row(
+            children: [
+              Expanded(child: _skeletonStatsCard()),
+              const SizedBox(width: 10),
+              Expanded(child: _skeletonStatsCard()),
+            ],
+          ),
+          const SizedBox(height: 18),
+          // Section title placeholder
+          Row(
+            children: [
+              const Skeleton(width: 22, height: 22, radius: 6),
+              const SizedBox(width: 8),
+              const Skeleton(width: 120, height: 16),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // Quick-actions grid — 6 squares
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: 6,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              mainAxisSpacing: 8,
+              crossAxisSpacing: 8,
+              childAspectRatio: 1.0,
+            ),
+            itemBuilder: (_, __) => const Skeleton(radius: 16),
+          ),
+          const SizedBox(height: 18),
+          // Info-card title + body
+          Row(
+            children: [
+              const Skeleton(width: 22, height: 22, radius: 6),
+              const SizedBox(width: 8),
+              const Skeleton(width: 100, height: 16),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Container(
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              border: Border.all(color: AppColors.border),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Column(
+              children: [
+                _skeletonInfoRow(),
+                const Divider(height: 1, color: AppColors.border),
+                _skeletonInfoRow(),
+                const Divider(height: 1, color: AppColors.border),
+                _skeletonInfoRow(),
+                const Divider(height: 1, color: AppColors.border),
+                _skeletonInfoRow(),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _skeletonStatsCard() {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: AppColors.border),
+      ),
+      padding: const EdgeInsets.all(14),
+      child: Row(
+        children: [
+          const Skeleton.box(size: 40),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                Skeleton(width: 70, height: 11),
+                SizedBox(height: 6),
+                Skeleton(width: 90, height: 18),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _skeletonInfoRow() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        children: [
+          const Skeleton.box(size: 36, radius: 8),
+          const SizedBox(width: 12),
+          const Skeleton(width: 80, height: 13),
+          const Spacer(),
+          const Skeleton(width: 110, height: 13),
+        ],
       ),
     );
   }

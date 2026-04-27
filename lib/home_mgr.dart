@@ -24,6 +24,7 @@ class _HomeMgrState extends State<HomeMgr> {
 
   final _storage = const FlutterSecureStorage();
   String username = "";
+  bool _loadFailed = false;
   Map<String, dynamic> empinfo = {};
 
   late FirebaseMessaging messaging;
@@ -73,12 +74,16 @@ class _HomeMgrState extends State<HomeMgr> {
       final response = await dioClient.get('/mgr/myinfoview');
       if (response.statusCode == 201) {
         var data = response.data;
+        if (!mounted) return;
         setState(() {
           empinfo = data;
+          _loadFailed = false;
         });
       }
     } catch (e) {
-      logD('Request failed: $e');
+      logD('HomeMgr /mgr/myinfoview failed: $e');
+      if (!mounted) return;
+      setState(() => _loadFailed = true);
     }
   }
 
@@ -102,12 +107,15 @@ class _HomeMgrState extends State<HomeMgr> {
             slivers: [
               SliverToBoxAdapter(
                   child: _buildHeader(context, t, currentLang)),
-              if (empinfo.isEmpty)
-                SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: _buildEmptyState(t),
-                )
-              else ...[
+              if (empinfo.isEmpty) ...[
+                if (_loadFailed)
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: _buildEmptyState(t),
+                  )
+                else
+                  SliverToBoxAdapter(child: _buildSkeleton()),
+              ] else ...[
                 SliverToBoxAdapter(child: _buildQuickActions(t)),
                 SliverToBoxAdapter(
                   child: SizedBox(
@@ -359,6 +367,38 @@ class _HomeMgrState extends State<HomeMgr> {
                 ),
               );
             },
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─── Skeleton placeholder (first-load shimmer) ──────────────
+  Widget _buildSkeleton() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: const [
+              Skeleton(width: 22, height: 22, radius: 6),
+              SizedBox(width: 8),
+              Skeleton(width: 140, height: 16),
+            ],
+          ),
+          const SizedBox(height: 12),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: 6,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              mainAxisSpacing: 8,
+              crossAxisSpacing: 8,
+              childAspectRatio: 1.0,
+            ),
+            itemBuilder: (_, __) => const Skeleton(radius: 16),
           ),
         ],
       ),
