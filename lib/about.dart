@@ -90,6 +90,8 @@ class AboutScreen extends StatelessWidget {
                     title: bi(context,
                         ar: "الموقع الإلكتروني", en: "Website"),
                     subtitle: "cloud.shubra.net",
+                    onTap: () =>
+                        Navigator.pushNamed(context, "/website"),
                   ),
                   const Divider(height: 1, color: AppColors.border),
                   _AboutTile(
@@ -100,6 +102,8 @@ class AboutScreen extends StatelessWidget {
                     subtitle: bi(context,
                         ar: "كيف نتعامل مع بياناتك",
                         en: "How we handle your data"),
+                    onTap: () =>
+                        Navigator.pushNamed(context, "/privacy"),
                   ),
                   const Divider(height: 1, color: AppColors.border),
                   _AboutTile(
@@ -111,6 +115,8 @@ class AboutScreen extends StatelessWidget {
                     subtitle: bi(context,
                         ar: "شروط استخدام التطبيق",
                         en: "App usage terms"),
+                    onTap: () =>
+                        Navigator.pushNamed(context, "/terms"),
                   ),
                 ],
               ),
@@ -137,46 +143,54 @@ class _AboutTile extends StatelessWidget {
   final Color iconColor;
   final String title;
   final String subtitle;
+  final VoidCallback onTap;
   const _AboutTile({
     required this.icon,
     required this.iconColor,
     required this.title,
     required this.subtitle,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.12),
-              borderRadius: BorderRadius.circular(AppRadius.xs),
-            ),
-            child: Icon(icon, color: iconColor, size: 20),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: iconColor.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(AppRadius.xs),
+                ),
+                child: Icon(icon, color: iconColor, size: 20),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w700, fontSize: 14.5)),
+                    const SizedBox(height: 2),
+                    Text(subtitle,
+                        style: const TextStyle(
+                            color: AppColors.muted, fontSize: 12.5)),
+                  ],
+                ),
+              ),
+              Icon(Icons.arrow_forward_ios_rounded,
+                  size: 13, color: AppColors.muted.withOpacity(0.6)),
+            ],
           ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w700, fontSize: 14.5)),
-                const SizedBox(height: 2),
-                Text(subtitle,
-                    style: const TextStyle(
-                        color: AppColors.muted, fontSize: 12.5)),
-              ],
-            ),
-          ),
-          Icon(Icons.arrow_forward_ios_rounded,
-              size: 13, color: AppColors.muted.withOpacity(0.6)),
-        ],
+        ),
       ),
     );
   }

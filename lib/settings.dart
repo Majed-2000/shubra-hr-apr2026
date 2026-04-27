@@ -92,6 +92,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   onTap: () =>
                       Navigator.pushNamed(context, "/updateInfo"),
                 ),
+                const Divider(height: 1, color: AppColors.border),
+                _SettingTile(
+                  icon: Icons.devices_other_rounded,
+                  iconColor: AppColors.warning,
+                  title: bi(context,
+                      ar: "الجلسات النشطة", en: "Active Sessions"),
+                  onTap: () =>
+                      Navigator.pushNamed(context, "/sessions"),
+                ),
               ],
             ),
           ),
@@ -116,7 +125,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   title: bi(context,
                       ar: "الخصوصية والأمان",
                       en: "Privacy & Security"),
-                  onTap: () {},
+                  onTap: () =>
+                      Navigator.pushNamed(context, "/privacy"),
                 ),
               ],
             ),

@@ -108,9 +108,7 @@ class _HomeMgrState extends State<HomeMgr> {
                   child: _buildEmptyState(t),
                 )
               else ...[
-                SliverToBoxAdapter(child: _buildBirthdayAndOccasions(t)),
                 SliverToBoxAdapter(child: _buildQuickActions(t)),
-                SliverToBoxAdapter(child: _buildInfoCard(t)),
                 SliverToBoxAdapter(
                   child: SizedBox(
                     height: 24 + MediaQuery.of(context).padding.bottom,
@@ -292,94 +290,6 @@ class _HomeMgrState extends State<HomeMgr> {
     );
   }
 
-  // ─── Birthday & occasions ───────────────────────────────────
-  Widget _buildBirthdayAndOccasions(AppLocalizations t) {
-    final hasBd = empinfo['bd'] == true;
-    final hasOcc =
-        empinfo['occ'] != null && (empinfo['occ'] as List).isNotEmpty;
-    if (!hasBd && !hasOcc) return const SizedBox.shrink();
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-      child: Column(
-        children: [
-          if (hasBd)
-            GlassCard(
-              padding: const EdgeInsets.all(14),
-              color: const Color(0xFFF0FAF8),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.12),
-                          borderRadius:
-                              BorderRadius.circular(AppRadius.sm),
-                        ),
-                        child: const Icon(Icons.cake_outlined,
-                            color: AppColors.primary, size: 20),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          t.hbd + " " + (empinfo['info']['emnme1'] ?? ''),
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 14,
-                            color: AppColors.primary,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(AppRadius.sm),
-                    child: Image.asset(
-                      "assets/hbd.jpg",
-                      fit: BoxFit.cover,
-                      width: double.infinity,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          if (hasBd && hasOcc) const SizedBox(height: 10),
-          if (hasOcc)
-            GlassCard(
-              padding: const EdgeInsets.all(14),
-              child: Column(
-                children: [
-                  Text(
-                    empinfo['occ'][0]['msg'].toString(),
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 16,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(AppRadius.sm),
-                    child: Image(
-                      image: NetworkImage(
-                        'https://cloud.shubra.net/uploads/' +
-                            empinfo['occ'][0]['attach'].toString(),
-                      ),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
   // ─── Quick actions ──────────────────────────────────────────
   Widget _buildQuickActions(AppLocalizations t) {
     final actions = [
@@ -449,100 +359,6 @@ class _HomeMgrState extends State<HomeMgr> {
                 ),
               );
             },
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ─── Info card ──────────────────────────────────────────────
-  Widget _buildInfoCard(AppLocalizations t) {
-    final info = empinfo['info'] ?? {};
-    final mgr = empinfo['mgr'] ?? {};
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SectionHeader(
-              title: t.myinfo, icon: Icons.person_outline_rounded),
-          const SizedBox(height: 10),
-          GlassCard(
-            padding: const EdgeInsets.symmetric(
-                horizontal: 16, vertical: 8),
-            child: Column(
-              children: [
-                InfoTile(
-                    icon: Icons.person_outline,
-                    label: t.name,
-                    value: '${info['emnme1'] ?? ''}'),
-                const Divider(height: 1, color: AppColors.border),
-                InfoTile(
-                    icon: Icons.badge_outlined,
-                    label: t.empcode,
-                    value: '${info['emcd'] ?? ''}'),
-                const Divider(height: 1, color: AppColors.border),
-                InfoTile(
-                    icon: Icons.phone_iphone_rounded,
-                    label: t.mobile,
-                    value: '${info['empmob'] ?? ''}'),
-                const Divider(height: 1, color: AppColors.border),
-                InfoTile(
-                    icon: Icons.supervisor_account_outlined,
-                    label: t.manager,
-                    value: '${mgr['emnme1'] ?? ''}'),
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
-          GlassCard(
-            onTap: () => Navigator.pushNamed(context, "/profile"),
-            padding: const EdgeInsets.all(14),
-            child: Row(
-              children: [
-                Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.10),
-                    borderRadius: BorderRadius.circular(AppRadius.sm),
-                  ),
-                  child: const Icon(Icons.lock_outline_rounded,
-                      color: AppColors.primary, size: 18),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        bi(context,
-                            ar: "التفاصيل المالية",
-                            en: "Financial details"),
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 14,
-                          color: AppColors.onSurface,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        bi(context,
-                            ar:
-                                "الراتب والحساب البنكي والآيبان — مخفية للخصوصية",
-                            en: "Salary, bank & IBAN — hidden for privacy"),
-                        style: const TextStyle(
-                          color: AppColors.muted,
-                          fontSize: 11.5,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const Icon(Icons.arrow_forward_ios_rounded,
-                    size: 14, color: AppColors.muted),
-              ],
-            ),
           ),
         ],
       ),

@@ -17,7 +17,9 @@ import 'package:shubraepp/home.dart';
 import 'package:shubraepp/login.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:shubraepp/new_account.dart';
+import 'package:shubraepp/privacy.dart';
 import 'package:shubraepp/request_loan.dart';
+import 'package:shubraepp/sessions.dart';
 import 'package:shubraepp/salary_details.dart';
 import 'package:shubraepp/token_loans.dart';
 import 'package:shubraepp/update_info.dart';
@@ -35,6 +37,8 @@ import 'theme.dart';
 import 'settings.dart';
 import 'profile.dart';
 import 'about.dart';
+import 'terms.dart';
+import 'website.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 final ValueNotifier<Locale> localeNotifier = ValueNotifier(Locale("ar"));
@@ -172,6 +176,10 @@ class _MyAppState extends State<MyApp>  {
             '/settings': (context) => const SettingsScreen(),
             '/profile': (context) => const ProfileScreen(),
             '/about': (context) => const AboutScreen(),
+            '/privacy': (context) => const PrivacyScreen(),
+            '/terms': (context) => const TermsScreen(),
+            '/website': (context) => const WebsiteScreen(),
+            '/sessions': (context) => const SessionsScreen(),
             '/logout': (context) => Login(),
           },
         );
