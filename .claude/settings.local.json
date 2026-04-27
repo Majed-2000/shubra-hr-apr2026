@@ -18,7 +18,21 @@
       "WebFetch(domain:colorswall.com)",
       "Bash(git add *)",
       "Bash(git commit *)",
-      "Bash(git tag *)"
+      "Bash(git tag *)",
+      "Bash(flutter analyze *)",
+      "WebFetch(domain:play.google.com)",
+      "WebFetch(domain:25282016.fs1.hubspotusercontent-eu1.net)",
+      "WebFetch(domain:m.apkpure.com)",
+      "WebFetch(domain:apkpure.com)",
+      "WebFetch(domain:www.softwaresuggest.com)",
+      "Bash(dart analyze *)",
+      "Bash(awk '/Widget build/,/^  \\\\}/' lib/loginMgr.dart)",
+      "Bash(grep -c \"^  ///\" /c/Users/smaji/Desktop/HR-iOS-main/lib/*.dart)",
+      "Bash(grep -v \":0$\")",
+      "Bash(flutter gen-l10n *)",
+      "Bash(flutter pub *)",
+      "Bash(flutter build *)",
+      "Bash(git rm *)"
     ]
   }
 }
