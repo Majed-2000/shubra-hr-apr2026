@@ -101,7 +101,12 @@ class _DigitalCardState extends State<DigitalCard>
       logD('Card unexpected error: $e');
       if (!mounted) return;
       _hasData = false;
-      SnackbarHelpers.showError(context, e.toString());
+      SnackbarHelpers.showError(
+        context,
+        isArabic(context)
+            ? 'حدث خطأ غير متوقع. يُرجى المحاولة مرة أخرى.'
+            : 'Something went wrong. Please try again.',
+      );
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

@@ -136,7 +136,12 @@ class _LeaverequestsMgrState extends State<LeaverequestsMgr> {
     } on DioException catch (e) {
       _snack(parseDioError(e, isArabic: isArabic(context)));
     } catch (e) {
-      _snack(e.toString());
+      logD('Leave action unexpected error: $e');
+      _snack(
+        isArabic(context)
+            ? 'حدث خطأ غير متوقع. يُرجى المحاولة مرة أخرى.'
+            : 'Something went wrong. Please try again.',
+      );
     }
   }
 
@@ -150,7 +155,12 @@ class _LeaverequestsMgrState extends State<LeaverequestsMgr> {
     } on DioException catch (e) {
       _snack(parseDioError(e, isArabic: isArabic(context)));
     } catch (e) {
-      _snack(e.toString());
+      logD('Leave action unexpected error: $e');
+      _snack(
+        isArabic(context)
+            ? 'حدث خطأ غير متوقع. يُرجى المحاولة مرة أخرى.'
+            : 'Something went wrong. Please try again.',
+      );
     }
   }
 

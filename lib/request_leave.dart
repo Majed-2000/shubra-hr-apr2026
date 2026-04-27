@@ -8,6 +8,7 @@ import 'dio_client.dart';
 import 'constants/leave_types.dart';
 import 'l10n/app_localizations.dart';
 import 'shared/utils/dio_errors.dart';
+import 'shared/utils/logger.dart';
 import 'shared/utils/snackbar.dart';
 import 'shared/widgets/date_picker_tile.dart';
 import 'shared/widgets/vacation_type_card.dart';
@@ -78,8 +79,13 @@ class _RequestLeaveState extends State<RequestLeave> {
       setState(() => _loading = false);
       _snack(parseDioError(e, isArabic: isArabic(context)));
     } catch (e) {
+      logD('Vacation form load unexpected error: $e');
       setState(() => _loading = false);
-      _snack(e.toString());
+      _snack(
+        isArabic(context)
+            ? 'حدث خطأ غير متوقع. يُرجى المحاولة مرة أخرى.'
+            : 'Something went wrong. Please try again.',
+      );
     }
   }
 
@@ -276,7 +282,12 @@ class _RequestLeaveState extends State<RequestLeave> {
     } on DioException catch (e) {
       _snack(parseDioError(e, isArabic: isArabic(context)));
     } catch (e) {
-      _snack(e.toString());
+      logD('Vacation submit unexpected error: $e');
+      _snack(
+        isArabic(context)
+            ? 'حدث خطأ غير متوقع. يُرجى المحاولة مرة أخرى.'
+            : 'Something went wrong. Please try again.',
+      );
     } finally {
       if (mounted) setState(() => _submitting = false);
     }

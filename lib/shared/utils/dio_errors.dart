@@ -1,94 +1,110 @@
 import 'package:dio/dio.dart';
 
-/// Pulls a human-readable message out of a Dio failure.
+import 'logger.dart';
+
+/// Pulls a friendly message out of a Dio failure.
+///
+/// Designed for non-technical users (incl. 60+): the returned text contains
+/// no status codes, no exception type names, and no raw stack-trace lines.
+/// The technical detail still gets written via [logD] so developers can
+/// debug from console output.
 ///
 /// Priority:
-///   1. Backend body's `message` / `error` / `detail` field.
-///   2. HTTP status code (5xx → server error with code, 4xx with empty body
-///      → fallback by code).
-///   3. DioExceptionType-specific reason (timeout, unreachable host,
-///      certificate, cancellation).
-///   4. Raw `e.message`.
-///   5. Generic "network error".
-///
-/// Callers pass [isArabic] so the message is rendered in the right
-/// language when the backend body is empty.
+///   1. Backend body's `message` / `error` / `detail` field — the team owns
+///      that copy and we trust it to be user-friendly.
+///   2. Friendly category fallback derived from the failure shape (server
+///      down, no internet, slow connection, request rejected, …).
+///   3. Generic "something went wrong, try again".
 String parseDioError(Object e, {required bool isArabic}) {
   if (e is! DioException) {
-    return isArabic ? 'خطأ في الشبكة' : 'Network error';
+    logD('parseDioError: non-Dio error: $e');
+    return _generic(isArabic);
   }
 
-  // 1. Body-driven message wins — backend usually has the most specific text.
-  final response = e.response;
-  final data = response?.data;
+  // Always log the technical truth for devs.
+  logD(
+    'parseDioError: type=${e.type.name} '
+    'code=${e.response?.statusCode} '
+    'path=${e.requestOptions.path} '
+    'msg=${e.message} '
+    'body=${e.response?.data}',
+  );
+
+  // 1. Backend-provided message — trust it. Only show if it's reasonably
+  // short (long technical strings are almost certainly a stack-style dump
+  // and would scare users).
+  final data = e.response?.data;
+  String? backendMsg;
   if (data is Map) {
     final raw = data['message'] ?? data['error'] ?? data['detail'];
-    final msg = raw?.toString().trim();
-    if (msg != null && msg.isNotEmpty) return msg;
+    backendMsg = raw?.toString().trim();
+  } else if (data is String) {
+    backendMsg = data.trim();
   }
-  if (data is String && data.trim().isNotEmpty) return data.trim();
-
-  // 2. Got a response (so the server responded) but no useful body.
-  final code = response?.statusCode;
-  if (code != null) {
-    if (code >= 500) {
-      return isArabic
-          ? "خطأ في الخادم ($code) — حاول لاحقًا"
-          : "Server error ($code) — try again later";
-    }
-    if (code >= 400) {
-      return isArabic
-          ? "تعذر إتمام الطلب ($code)"
-          : "Request rejected ($code)";
-    }
+  if (backendMsg != null &&
+      backendMsg.isNotEmpty &&
+      backendMsg.length <= 160 &&
+      !backendMsg.contains('\n') &&
+      !_looksLikeStackTrace(backendMsg)) {
+    return backendMsg;
   }
 
-  // 3. No response — connection-layer failure. Tell the user *which* one.
+  // 2. Friendly category by failure shape.
+  final code = e.response?.statusCode ?? 0;
+  if (code >= 500) {
+    return isArabic
+        ? 'الخدمة غير متوفرة حاليًا. يُرجى المحاولة بعد قليل.'
+        : 'The service is unavailable right now. Please try again in a moment.';
+  }
+  if (code >= 400) {
+    return isArabic
+        ? 'تعذّر إتمام الطلب. تأكد من البيانات وحاول مرة أخرى.'
+        : "Couldn't complete the request. Check your details and try again.";
+  }
+
   switch (e.type) {
     case DioExceptionType.connectionTimeout:
-      return isArabic
-          ? "انتهت مهلة الاتصال — تحقق من الإنترنت"
-          : "Connection timed out — check your internet";
     case DioExceptionType.sendTimeout:
       return isArabic
-          ? "انتهت مهلة إرسال الطلب — تحقق من الإنترنت"
-          : "Send timed out — check your internet";
+          ? 'الاتصال بالإنترنت بطيء. تأكد من الشبكة وحاول مرة أخرى.'
+          : 'Your internet connection seems slow. Please check it and try again.';
     case DioExceptionType.receiveTimeout:
       return isArabic
-          ? "انتهت مهلة استقبال الرد من الخادم"
-          : "Server took too long to respond";
-    case DioExceptionType.badCertificate:
-      return isArabic
-          ? "خطأ في شهادة الأمان (SSL)"
-          : "SSL certificate error";
+          ? 'استغرق الخادم وقتًا طويلاً للرد. يُرجى المحاولة لاحقًا.'
+          : 'The server is taking too long to respond. Please try again later.';
     case DioExceptionType.connectionError:
       return isArabic
-          ? "تعذر الوصول إلى الخادم — تحقق من اتصال الإنترنت"
-          : "Couldn't reach the server — check your internet";
+          ? 'تعذّر الاتصال بالإنترنت. يُرجى التأكد من الشبكة.'
+          : "Couldn't connect to the internet. Please check your connection.";
+    case DioExceptionType.badCertificate:
+      return isArabic
+          ? 'تعذّر التحقق من أمان الاتصال. تأكد من تاريخ الجهاز ثم حاول مرة أخرى.'
+          : "Couldn't verify a secure connection. Please check your device's date and try again.";
     case DioExceptionType.cancel:
-      return isArabic ? "تم إلغاء الطلب" : "Request cancelled";
+      return isArabic ? 'تم إلغاء الطلب.' : 'The request was cancelled.';
     case DioExceptionType.badResponse:
     case DioExceptionType.unknown:
       break;
   }
 
-  // 4. Last resort — surface *something* concrete from the exception so
-  // failures aren't invisible. Pull the first usable line and truncate.
-  final raw = e.message?.trim();
-  final typeLabel = e.type.name; // "unknown", "badResponse", etc.
-  if (raw != null && raw.isNotEmpty) {
-    final firstLine = raw
-        .split('\n')
-        .map((l) => l.trim())
-        .firstWhere((l) => l.isNotEmpty, orElse: () => raw);
-    final compact =
-        firstLine.length > 140 ? '${firstLine.substring(0, 140)}…' : firstLine;
-    return isArabic
-        ? 'خطأ ($typeLabel): $compact'
-        : 'Error ($typeLabel): $compact';
-  }
+  return _generic(isArabic);
+}
 
-  return isArabic
-      ? 'خطأ في الشبكة ($typeLabel)'
-      : 'Network error ($typeLabel)';
+String _generic(bool isArabic) => isArabic
+    ? 'حدث خطأ غير متوقع. يُرجى المحاولة مرة أخرى.'
+    : 'Something went wrong. Please try again.';
+
+/// Heuristic — if the backend message looks like a Dart/Java stack trace
+/// or a JSON-serialised exception, we prefer the friendly fallback so the
+/// user doesn't see something like
+/// "DioException [bad response]: HTTP 502 ... at #0 ...".
+bool _looksLikeStackTrace(String s) {
+  return s.contains('Exception:') ||
+      s.contains('Error:') ||
+      s.startsWith('#0') ||
+      s.contains('  at ') ||
+      s.contains('DioException') ||
+      s.contains('SocketException') ||
+      s.contains('FormatException') ||
+      s.contains('TimeoutException');
 }

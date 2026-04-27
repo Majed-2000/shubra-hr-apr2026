@@ -115,57 +115,64 @@ class _LoginState extends State<Login> {
     }
   }
 
-  /// Pick the most specific message available for an auth failure.
+  /// Pick the friendliest message available for an auth failure.
   ///
-  /// Priority: backend's `message` / `error` field > status-code-specific
-  /// fallback > generic `wronginfo`. [isOtpStep] flips a few fallbacks
-  /// (e.g. 401 means "wrong OTP" during verify, not during /login).
+  /// Priority: backend's short `message` / `error` field > a friendly
+  /// status-code-specific fallback > generic. Avoids exposing status
+  /// codes or technical strings to the user. [isOtpStep] flips a few
+  /// fallbacks (e.g. a rejection during verify means "wrong OTP", not
+  /// during /login).
   String _authErrorFor(int code, dynamic data, {required bool isOtpStep}) {
     if (data is Map) {
       final raw = data['message'] ?? data['error'] ?? data['detail'];
       final msg = raw?.toString().trim();
-      if (msg != null && msg.isNotEmpty) return msg;
+      if (msg != null &&
+          msg.isNotEmpty &&
+          msg.length <= 160 &&
+          !msg.contains('\n')) {
+        return msg;
+      }
     }
     final ar = isArabic(context);
     switch (code) {
       case 400:
+      case 422:
         return ar
-            ? "البيانات المرسلة غير صالحة"
-            : "Invalid request data";
+            ? "البيانات المُدخلة غير صحيحة. تأكد منها وحاول مرة أخرى."
+            : "The information you entered is not correct. Please check it and try again.";
       case 401:
         return isOtpStep
-            ? (ar ? "رمز التحقق غير صحيح" : "Wrong verification code")
-            : (ar ? "غير مصرح" : "Unauthorized");
+            ? (ar
+                ? "رمز التحقق غير صحيح. تأكد من الرمز وحاول مرة أخرى."
+                : "The verification code is not correct. Please try again.")
+            : (ar
+                ? "تعذّر تسجيل الدخول. تأكد من البيانات وحاول مرة أخرى."
+                : "We couldn't sign you in. Please try again.");
       case 403:
         return ar
-            ? "الحساب موقوف، تواصل مع الموارد البشرية"
-            : "Account is blocked — contact HR";
+            ? "حسابك غير مفعّل حاليًا. يُرجى التواصل مع قسم الموارد البشرية."
+            : "Your account is not active. Please contact the HR department.";
       case 404:
         return isOtpStep
             ? (ar
-                ? "رمز التحقق منتهي أو غير موجود"
-                : "Verification code not found or expired")
+                ? "انتهت صلاحية رمز التحقق. اطلب رمزًا جديدًا."
+                : "The verification code has expired. Please request a new one.")
             : (ar
-                ? "رقم الموظف غير مسجل في النظام"
-                : "Employee code is not registered");
+                ? "رقم الموظف غير موجود. تأكد من الرقم أو تواصل مع الموارد البشرية."
+                : "Employee number not found. Please check it or contact the HR department.");
       case 409:
-        return ar
-            ? "رمز التحقق منتهي أو سبق استخدامه"
-            : "OTP expired or already used";
       case 410:
         return ar
-            ? "رمز التحقق منتهي الصلاحية"
-            : "OTP has expired";
-      case 422:
-        return ar
-            ? "البيانات المدخلة غير مكتملة"
-            : "Submitted data is incomplete";
+            ? "انتهت صلاحية رمز التحقق. اطلب رمزًا جديدًا."
+            : "The verification code has expired. Please request a new one.";
       case 429:
         return ar
-            ? "محاولات كثيرة، يُرجى الانتظار قبل إعادة المحاولة"
-            : "Too many attempts, please wait before retrying";
+            ? "حاولت كثيرًا. يُرجى الانتظار قليلًا ثم المحاولة مرة أخرى."
+            : "Too many attempts. Please wait a moment and try again.";
       default:
-        return AppLocalizations.of(context)!.wronginfo;
+        return ar
+            ? "تعذّر إتمام العملية. يُرجى المحاولة مرة أخرى."
+            : "We couldn't complete the action. Please try again.";
     }
   }
 

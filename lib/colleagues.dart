@@ -58,7 +58,12 @@ class _ColleaguesState extends State<Colleagues> {
       logD('Colleagues unexpected error: $e');
       if (!mounted) return;
       _hasData = false;
-      SnackbarHelpers.showError(context, e.toString());
+      SnackbarHelpers.showError(
+        context,
+        isArabic(context)
+            ? 'حدث خطأ غير متوقع. يُرجى المحاولة مرة أخرى.'
+            : 'Something went wrong. Please try again.',
+      );
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
