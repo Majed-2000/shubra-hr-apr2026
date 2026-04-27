@@ -74,6 +74,16 @@ class _HomeState extends State<Home> {
       final response = await dioClient.get('/myinfoview');
       if (response.statusCode == 201) {
         var data = response.data;
+        // Backend may include is_manager in /myinfoview to keep the role
+        // flag fresh between logins (handles grant/revoke without re-login).
+        if (data is Map && data.containsKey('is_manager')) {
+          final freshFlag = data['is_manager'] == true;
+          await _storage.write(
+              key: 'is_manager', value: freshFlag ? 'true' : 'false');
+          if (mounted && freshFlag != isManager) {
+            setState(() => isManager = freshFlag);
+          }
+        }
         setState(() {
           empinfo = data;
         });
@@ -165,8 +175,11 @@ class _HomeState extends State<Home> {
               if (isManager) ...[
                 _iconBtn(
                   Icons.admin_panel_settings_outlined,
-                  onTap: () =>
-                      Navigator.pushReplacementNamed(context, "/homeMgr"),
+                  onTap: () async {
+                    await _storage.write(key: 'current_view', value: 'mgr');
+                    if (!mounted) return;
+                    Navigator.pushReplacementNamed(context, "/homeMgr");
+                  },
                 ),
                 const SizedBox(width: 8),
               ],

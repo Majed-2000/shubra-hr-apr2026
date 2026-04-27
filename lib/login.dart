@@ -78,6 +78,7 @@ class _LoginState extends State<Login> {
         await _storage.write(key: 'name', value: data['user']['name']);
         final isManager = data['is_manager'] == true;
         await _storage.write(key: 'is_manager', value: isManager ? 'true' : 'false');
+        await _storage.write(key: 'current_view', value: 'user');
         Navigator.pushReplacementNamed(context, '/home');
       } else {
         _snack(AppLocalizations.of(context)!.wronginfo);

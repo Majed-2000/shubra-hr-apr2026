@@ -34,7 +34,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _load() async {
     final n = await _storage.read(key: "name");
-    final tp = await _storage.read(key: "type");
+    final tp = await _storage.read(key: "current_view");
     if (n != null) name = n;
     if (tp != null) type = tp;
     try {

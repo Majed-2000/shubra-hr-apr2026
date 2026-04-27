@@ -56,8 +56,11 @@ class _NewaccountState extends State<NewAccount> {
               key: 'access_token', value: data['access_token']);
           await _storage.write(
               key: 'refresh_token', value: data['refresh_token']);
-          await _storage.write(key: 'type', value: "user");
           await _storage.write(key: 'name', value: data['user']['name']);
+          final isManager = data['is_manager'] == true;
+          await _storage.write(
+              key: 'is_manager', value: isManager ? 'true' : 'false');
+          await _storage.write(key: 'current_view', value: 'user');
           Navigator.pushNamed(context, '/home');
         }
       }

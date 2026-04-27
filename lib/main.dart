@@ -17,7 +17,6 @@ import 'package:shubraepp/home.dart';
 import 'package:shubraepp/login.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:shubraepp/new_account.dart';
-import 'package:shubraepp/new_account_mgr.dart';
 import 'package:shubraepp/request_loan.dart';
 import 'package:shubraepp/salary_details.dart';
 import 'package:shubraepp/token_loans.dart';
@@ -148,7 +147,6 @@ class _MyAppState extends State<MyApp>  {
             '/login': (context) => Login(),
             '/newaccount': (context) => NewAccount(),
             '/homeMgr': (context) => HomeMgr(),
-            '/newaccountmgr': (context) => NewAccountMGR(),
             '/home': (context) => Home(),
             '/updateInfo': (context) => UpdateInfo(),
             '/complaint': (context) => Complaint(),
@@ -202,6 +200,27 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<void> checkAuth() async {
     await Future.delayed(Duration(seconds: 2));
     String? token = await _storage.read(key: "access_token");
+    String? legacyType = await _storage.read(key: "type");
+
+    // Legacy manager-only session (token came from /verify-mgr) — its scope
+    // probably doesn't cover user endpoints, so force a fresh login. Preserve
+    // locale so the user doesn't lose their language preference.
+    if (legacyType == 'mgr') {
+      String? locale = await _storage.read(key: "locale");
+      await _storage.deleteAll();
+      if (locale != null) {
+        await _storage.write(key: "locale", value: locale);
+      }
+      if (!mounted) return;
+      Navigator.pushReplacementNamed(context, '/login');
+      return;
+    }
+
+    // Legacy employee session — silently migrate `type` → `current_view`.
+    if (legacyType == 'user') {
+      await _storage.delete(key: "type");
+      await _storage.write(key: "current_view", value: "user");
+    }
 
     if (!mounted) return;
 
