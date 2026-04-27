@@ -32,6 +32,7 @@ import 'home_mgr.dart';
 import 'l10n/app_localizations.dart';
 import 'leave_requests_mgr.dart';
 import 'loan_requests_mgr.dart';
+import 'shared/utils/device_info.dart';
 import 'shared/utils/logger.dart';
 import 'theme.dart';
 import 'settings.dart';
@@ -69,6 +70,7 @@ void main() async {
   final _storage = FlutterSecureStorage();
   String? savedLocale = await _storage.read(key: "locale");
   localeNotifier.value = (savedLocale == "en") ? Locale("en") : Locale("ar");
+  await DeviceFingerprint.init();
   await Firebase.initializeApp();
   FirebaseMessaging.onMessage.listen((RemoteMessage message) {
     RemoteNotification? notification = message.notification;
