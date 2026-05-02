@@ -13,8 +13,8 @@ android {
         applicationId = "com.shubra.hr"
         minSdk = flutter.minSdkVersion
         targetSdk = 36
-        versionCode = 8
-        versionName = "8.0"
+        versionCode = 100
+        versionName = "2.0.1"
     }
 
     compileOptions {
@@ -29,7 +29,7 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file("/Users/skytech/Desktop/moh.jks") // Prefer relative path if possible
+            storeFile = file("C:/Users/smaji/Desktop/moh.jks") // Prefer relative path if possible
             storePassword = "moha990"
             keyAlias = "my-key-alias"
             keyPassword = "moha990"

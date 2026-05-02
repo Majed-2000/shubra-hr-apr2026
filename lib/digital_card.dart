@@ -6,10 +6,12 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 
+import 'config/app_config.dart';
 import 'dio_client.dart';
 import 'l10n/app_localizations.dart';
 import 'shared/utils/dio_errors.dart';
@@ -34,6 +36,7 @@ class _DigitalCardState extends State<DigitalCard>
   static const Color _gradEnd = Color(0xFF0D47A1);
 
   final dioClient = DioClient().client;
+  final _storage = const FlutterSecureStorage();
   final GlobalKey _cardKey = GlobalKey();
 
   late final AnimationController _fadeCtrl;
@@ -45,8 +48,10 @@ class _DigitalCardState extends State<DigitalCard>
 
   String _empCode = '';
   String _nameAr = '';
-  String _nameEn = '';
   String _jobTitle = '';
+  String _department = '';
+  String? _photoUrl;
+  Map<String, String>? _photoHeaders;
 
   @override
   void initState() {
@@ -78,13 +83,53 @@ class _DigitalCardState extends State<DigitalCard>
         info['emnma2'],
         info['emnma3'],
       ].whereType<Object>().map((e) => e.toString()).join(' ').trim();
-      _nameEn = [
-        info['emnme1'],
-        info['emnme2'],
-        info['emnme3'],
-      ].whereType<Object>().map((e) => e.toString()).join(' ').trim();
-      _jobTitle = info['emjbtl']?.toString() ?? '';
+
+      // Backend resolves these via PYMNG/PYDPT joins. Be permissive about
+      // where they land (top-level vs. inside info) and the casing
+      // (camelCase vs. snake_case) so a small backend rename doesn't
+      // silently empty the card.
+      _jobTitle = _firstNonEmpty(data,
+              ['jobTitle', 'job_title', 'jobtitle', 'JobTitle']) ??
+          _firstNonEmpty(info, [
+                'jobTitle',
+                'job_title',
+                'jobtitle',
+                'emjbtl',
+                'emjbnm',
+              ]) ??
+          '';
+      _department = _firstNonEmpty(data, [
+            'deptName',
+            'dept_name',
+            'departmentName',
+            'department',
+          ]) ??
+          _firstNonEmpty(info, ['deptName', 'dept_name']) ??
+          '';
+      if (_department.isEmpty) {
+        final mgr2 = data['mgr2'];
+        if (mgr2 is Map) {
+          _department =
+              _firstNonEmpty(mgr2, ['mnnma', 'mnnme', 'name']) ?? '';
+        }
+      }
+
+      // Debug-only visibility. Read these in the dev console after a
+      // hot restart and tell me what shows up.
+      logD('digital_card /myinfoview TOP keys: ${data.keys.toList()}');
+      logD('digital_card /myinfoview info keys: ${info.keys.toList()}');
+      logD('digital_card RESOLVED jobTitle="$_jobTitle" department="$_department"');
       _hasData = _empCode.isNotEmpty;
+
+      // Photo: build URL from configured template and prep auth header.
+      // If template isn't set or empcode is empty, _photoUrl stays null
+      // and the card renders the fallback avatar.
+      _photoUrl = AppConfig.employeePhotoUrl(_empCode);
+      if (_photoUrl != null) {
+        final token = await _storage.read(key: 'access_token');
+        _photoHeaders =
+            token != null ? {'Authorization': 'Bearer $token'} : null;
+      }
 
       if (_hasData && mounted) {
         _fadeCtrl.forward(from: 0);
@@ -256,6 +301,71 @@ class _DigitalCardState extends State<DigitalCard>
     );
   }
 
+  /// Walks [keys] in order on [m] and returns the first value that, after
+  /// trim, is non-empty. Returns null when nothing matches — caller picks
+  /// the fallback. Tolerates [m] being null or any non-Map.
+  String? _firstNonEmpty(dynamic m, List<String> keys) {
+    if (m is! Map) return null;
+    for (final k in keys) {
+      final v = m[k];
+      if (v == null) continue;
+      final s = v.toString().trim();
+      if (s.isNotEmpty) return s;
+    }
+    return null;
+  }
+
+  /// Avatar slot on the card. Tries the configured employee-photo URL
+  /// first; on any failure (no URL set, 404, network error, decode error)
+  /// quietly falls back to a generic person icon. The user explicitly
+  /// asked for "show photo if available, skip otherwise" — no error UI.
+  Widget _buildAvatar() {
+    final url = _photoUrl;
+    if (url == null) return _avatarFallback();
+    return Container(
+      width: 56,
+      height: 56,
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.18),
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white24, width: 1),
+      ),
+      child: ClipOval(
+        child: Image.network(
+          url,
+          headers: _photoHeaders,
+          fit: BoxFit.cover,
+          width: 56,
+          height: 56,
+          errorBuilder: (_, __, ___) => _avatarFallback(plain: true),
+          loadingBuilder: (_, child, progress) {
+            if (progress == null) return child;
+            return _avatarFallback(plain: true);
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _avatarFallback({bool plain = false}) {
+    final icon = const Icon(
+      Icons.person_rounded,
+      color: Colors.white,
+      size: 30,
+    );
+    if (plain) return Center(child: icon);
+    return Container(
+      width: 56,
+      height: 56,
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.18),
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white24, width: 1),
+      ),
+      child: icon,
+    );
+  }
+
   Widget _buildCard(AppLocalizations t) {
     return Container(
       decoration: BoxDecoration(
@@ -312,50 +422,23 @@ class _DigitalCardState extends State<DigitalCard>
           Expanded(
             child: Row(
               children: [
-                Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.18),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white24, width: 1),
-                  ),
-                  child: const Icon(
-                    Icons.person_rounded,
-                    color: Colors.white,
-                    size: 30,
-                  ),
-                ),
+                _buildAvatar(),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      if (_nameEn.isNotEmpty)
+                      if (_nameAr.isNotEmpty)
                         Text(
-                          _nameEn,
+                          _nameAr,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
+                          textDirection: TextDirection.rtl,
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 15,
                             fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      if (_nameAr.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 2),
-                          child: Text(
-                            _nameAr,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            textDirection: TextDirection.rtl,
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.92),
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                            ),
                           ),
                         ),
                       if (_jobTitle.isNotEmpty)
@@ -369,6 +452,21 @@ class _DigitalCardState extends State<DigitalCard>
                               color: Colors.white.withOpacity(0.85),
                               fontSize: 11.5,
                               fontWeight: FontWeight.w600,
+                              letterSpacing: 0.3,
+                            ),
+                          ),
+                        ),
+                      if (_department.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Text(
+                            _department,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.72),
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w500,
                               letterSpacing: 0.3,
                             ),
                           ),

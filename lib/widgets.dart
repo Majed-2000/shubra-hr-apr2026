@@ -340,6 +340,7 @@ class LabeledField extends StatelessWidget {
   final int maxLines;
   final TextInputType? keyboardType;
   final String? Function(String?)? validator;
+  final bool enabled;
 
   const LabeledField({
     super.key,
@@ -350,6 +351,7 @@ class LabeledField extends StatelessWidget {
     this.maxLines = 1,
     this.keyboardType,
     this.validator,
+    this.enabled = true,
   });
 
   @override
@@ -371,6 +373,7 @@ class LabeledField extends StatelessWidget {
           maxLines: maxLines,
           keyboardType: keyboardType,
           validator: validator,
+          enabled: enabled,
           decoration: InputDecoration(
             hintText: hint,
             prefixIcon: icon != null
