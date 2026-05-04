@@ -13,8 +13,8 @@ android {
         applicationId = "com.shubra.hr"
         minSdk = flutter.minSdkVersion
         targetSdk = 36
-        versionCode = 100
-        versionName = "2.0.1"
+        versionCode = 102
+        versionName = "2.0.2"
     }
 
     compileOptions {
