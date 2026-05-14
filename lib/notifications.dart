@@ -1,3 +1,10 @@
+// ============================================================================
+// ملف: notifications.dart
+// الغرض: صندوق إشعارات الموظف — قائمة بكل الإعلانات التي وصلته.
+// المحتوى: قائمة paginated، يستعمل InfiniteScrollMixin + PaginatedListView.
+// API: GET /getMyNotifications?page=N.
+// ============================================================================
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -12,6 +19,8 @@ import 'widgets.dart';
 
 /// Employee notifications inbox — paginated list of announcements pushed
 /// to the current user.
+///
+/// صندوق إشعارات الموظف — قائمة الإعلانات الموجّهة له (paginated).
 class Notifications extends StatefulWidget {
   const Notifications({super.key});
 
@@ -161,7 +170,7 @@ class _NotificationCard extends StatelessWidget {
               children: [
                 Text(
                   item.name ?? '',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w800,
                     fontSize: 15,
                     color: AppColors.onSurface,
@@ -171,7 +180,7 @@ class _NotificationCard extends StatelessWidget {
                   const SizedBox(height: 6),
                   Text(
                     item.msg!,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: AppColors.muted,
                       fontSize: 13.5,
                       height: 1.4,
@@ -181,12 +190,12 @@ class _NotificationCard extends StatelessWidget {
                 const SizedBox(height: 10),
                 Row(
                   children: [
-                    const Icon(Icons.schedule_rounded,
+                    Icon(Icons.schedule_rounded,
                         size: 13, color: AppColors.muted),
                     const SizedBox(width: 4),
                     Text(
                       formattedDate,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 11.5,
                         color: AppColors.muted,
                         fontWeight: FontWeight.w500,

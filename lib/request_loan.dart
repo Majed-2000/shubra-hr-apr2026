@@ -1,6 +1,12 @@
+// ============================================================================
+// ملف: request_loan.dart
+// الغرض: نموذج طلب قرض/سلفة من الشركة.
+// الحقول: المبلغ + سبب الطلب + مرفق اختياري (صورة).
+// API: POST /submitLoan (FormData لرفع المرفق).
+// ============================================================================
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'dio_client.dart';
@@ -10,6 +16,8 @@ import 'theme.dart';
 import 'widgets.dart';
 
 /// Loan-request form: amount, justification text, and optional attachment.
+///
+/// نموذج طلب قرض: مبلغ + سبب + مرفق اختياري.
 class RequestLoan extends StatefulWidget {
   @override
   _RequestLoanState createState() => _RequestLoanState();
@@ -24,16 +32,10 @@ class _RequestLoanState extends State<RequestLoan> {
   bool _sending = false;
 
   @override
-  void initState() {
-    super.initState();
-  }
-
-  gettoken() async {
-    final _storage = const FlutterSecureStorage();
-    var token = await _storage.read(key: "access_token");
-    if (token != null) {
-      Navigator.pushNamed(context, "/home");
-    }
+  void dispose() {
+    _amount.dispose();
+    _notice.dispose();
+    super.dispose();
   }
 
   void _snack(String m) => SnackbarHelpers.show(context, m);
@@ -112,14 +114,14 @@ class _RequestLoanState extends State<RequestLoan> {
                           children: [
                             Text(
                               t.amount,
-                              style: const TextStyle(
+                              style: TextStyle(
                                   color: AppColors.muted, fontSize: 12),
                             ),
                             const SizedBox(height: 4),
                             TextFormField(
                               controller: _amount,
                               keyboardType: TextInputType.number,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w800,
                                 color: AppColors.onSurface,

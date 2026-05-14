@@ -147,5 +147,11 @@
   "callBtn": "اتصال",
   "emailBtn": "بريد",
   "callFailed": "تعذّر بدء المكالمة",
-  "emailFailed": "تعذّر فتح تطبيق البريد"
+  "emailFailed": "تعذّر فتح تطبيق البريد",
+  "manualPunchTitle": "تسجيل بصمة يدوية",
+  "manualPunchEmpcode": "الرقم الوظيفي",
+  "manualPunchCheckIn": "تسجيل حضور",
+  "manualPunchCheckOut": "تسجيل انصراف",
+  "manualPunchSuccess": "تم تسجيل البصمة بنجاح",
+  "manualPunchFailed": "تعذّر تسجيل البصمة"
 }

@@ -1,3 +1,18 @@
+// ============================================================================
+// ملف: update_info.dart
+// الغرض: شاشة تعديل البريد الإلكتروني ورقم الجوال للموظف (مع تحقق OTP مزدوج).
+// التدفق:
+//   1) عرض البيانات الحالية (view mode).
+//   2) المستخدم يضغط "تعديل" → الحقول تصبح قابلة للتعديل.
+//   3) عند الحفظ:
+//      - إذا غيّر الإيميل: نُرسل OTP للإيميل الجديد ونتحقق منه.
+//      - إذا غيّر الموبايل: نُرسل OTP عبر SMS ونتحقق منه.
+//      - بعد التحقق المزدوج، نكتب في Oracle مباشرة.
+//   4) إذا الإيميل والموبايل فارغان من البداية → نبدأ في edit mode تلقائياً.
+// تذكير: الإيميل المرسِل هو digital.t@shubra.net، عنوان الرسالة:
+//        "تأكيد تحديث البريد الإلكتروني".
+// ============================================================================
+
 import 'dart:async';
 import 'package:dio/dio.dart' show DioException, Options;
 import 'package:flutter/material.dart';
@@ -34,16 +49,18 @@ class UpdateInfo extends StatefulWidget {
 
 class _UpdateInfoState extends State<UpdateInfo> {
   final _formKey = GlobalKey<FormState>();
+  // متحكّمات الحقول.
   final TextEditingController _email = TextEditingController();
   final TextEditingController _mobile = TextEditingController();
   final dioClient = DioClient().client;
 
-  bool _loading = true;
-  bool _loadFailed = false;
-  bool _editing = false;
-  bool _sending = false;
+  bool _loading = true;       // هل جلب البيانات الحالية جارٍ؟
+  bool _loadFailed = false;    // هل فشل الجلب الأولي؟
+  bool _editing = false;       // هل في وضع التعديل (true) أم العرض (false)؟
+  bool _sending = false;       // هل عملية الحفظ/OTP جارية؟
 
   // Backend-provided baseline. Used to detect changes and to revert on Cancel.
+  // القيم الأصلية من الـ backend — نستعملها لكشف التغيير وللعودة عند Cancel.
   String _initialEmail = '';
   String _initialMobile = '';
 
@@ -83,7 +100,7 @@ class _UpdateInfoState extends State<UpdateInfo> {
               const SizedBox(height: 12),
               Text(
                 '${ar ? "كود الخطأ" : "Error code"}: $httpCode',
-                style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                style: TextStyle(color: AppColors.muted, fontSize: 12),
               ),
             ],
           ],
@@ -98,10 +115,23 @@ class _UpdateInfoState extends State<UpdateInfo> {
     );
   }
 
-  bool get _hasChanges =>
-      _email.text.trim() != _initialEmail ||
-      _mobile.text.trim() != _initialMobile;
+  /// القيمة المُنظَّفة للإيميل (تُستعمل في كل المقارنات والإرسال).
+  String get _emailValue => _email.text.trim();
 
+  /// القيمة المُنظَّفة للجوال — تُزال المسافات والشُرَط (021-23 → 02123).
+  String get _mobileValue =>
+      _mobile.text.replaceAll(RegExp(r'[\s\-()]'), '').trim();
+
+  /// هل تغيّر الإيميل عن قيمته الأصلية في الـ backend؟
+  bool get _emailChanged => _emailValue != _initialEmail;
+
+  /// هل تغيّر الجوال عن قيمته الأصلية في الـ backend؟
+  bool get _mobileChanged => _mobileValue != _initialMobile;
+
+  /// هل غيّر المستخدم أحد الحقول مقارنة بالقيمة الأصلية؟
+  bool get _hasChanges => _emailChanged || _mobileChanged;
+
+  /// هل توجد بيانات أصلية في الـ backend (أم أن الحساب بلا إيميل/جوال)؟
   bool get _hasInitialData =>
       _initialEmail.isNotEmpty || _initialMobile.isNotEmpty;
 
@@ -142,8 +172,10 @@ class _UpdateInfoState extends State<UpdateInfo> {
     }
   }
 
+  /// الدخول إلى وضع التعديل (الحقول تصبح قابلة للكتابة).
   void _onEdit() => setState(() => _editing = true);
 
+  /// إلغاء التعديل: استعادة القيم الأصلية والعودة إلى وضع العرض.
   void _onCancelEdit() {
     setState(() {
       _email.text = _initialEmail;
@@ -153,6 +185,7 @@ class _UpdateInfoState extends State<UpdateInfo> {
     _formKey.currentState?.reset();
   }
 
+  /// تأكيد أن البيانات الحالية صحيحة (المستخدم ضغط "البيانات صحيحة").
   void _onConfirmCorrect() {
     _snack(bi(context,
         ar: "شكرًا، بياناتك مؤكدة", en: "Thanks — your data is confirmed"));
@@ -161,13 +194,21 @@ class _UpdateInfoState extends State<UpdateInfo> {
 
   // ─── OTP flow ────────────────────────────────────────────────────────
 
-  /// Step 1: ask backend to send OTPs to the new email AND new mobile.
+  /// Step 1: ask backend to send OTPs only for the field(s) the user changed.
+  /// Passing `null` for an unchanged field signals the backend not to send an
+  /// OTP for it (and not to overwrite the stored value).
   /// Returns the `request_id` on success, null on failure (dialog already shown).
-  Future<String?> _requestOtps() async {
+  Future<String?> _requestOtps({String? email, String? mobile}) async {
     try {
+      // نُرسل فقط الحقول المتغيّرة. إرسال الحقول كلها يُسبّب إرسال OTP
+      // غير ضروري للحقل الذي لم يتغيّر (مشكلة شائعة عندما يحاول المستخدم
+      // تعديل الإيميل فقط لكنه يستقبل SMS على جوال قديم/خاطئ).
+      final payload = <String, dynamic>{};
+      if (email != null) payload['email'] = email;
+      if (mobile != null) payload['mobile'] = mobile;
       final response = await dioClient.post(
         '/updateInfo/request',
-        data: {'email': _email.text, 'mobile': _mobile.text},
+        data: payload,
         options: Options(validateStatus: (s) => s != null && s < 500),
       );
       final data = response.data;
@@ -219,21 +260,23 @@ class _UpdateInfoState extends State<UpdateInfo> {
     }
   }
 
-  /// Step 3: submit both OTPs together. Backend validates and writes to
-  /// Oracle if both pass. Returns true on success.
+  /// Step 3: submit the OTPs for the changed fields. Backend validates and
+  /// writes to Oracle if all provided OTPs pass. Returns true on success.
+  ///
+  /// نُمرّر فقط الـ OTPs للحقول التي تغيّرت. الباك-إند يتجاهل الحقل غير الموجود
+  /// في الـ payload ولا يُعدّله في Oracle.
   Future<bool> _verifyOtps({
     required String requestId,
-    required String emailOtp,
-    required String phoneOtp,
+    String? emailOtp,
+    String? phoneOtp,
   }) async {
     try {
+      final payload = <String, dynamic>{'request_id': requestId};
+      if (emailOtp != null) payload['email_otp'] = emailOtp;
+      if (phoneOtp != null) payload['phone_otp'] = phoneOtp;
       final response = await dioClient.post(
         '/updateInfo/verify',
-        data: {
-          'request_id': requestId,
-          'email_otp': emailOtp,
-          'phone_otp': phoneOtp,
-        },
+        data: payload,
         options: Options(validateStatus: (s) => s != null && s < 500),
       );
       final data = response.data;
@@ -301,31 +344,53 @@ class _UpdateInfoState extends State<UpdateInfo> {
     }
   }
 
+  /// تنفيذ الحفظ — يطلب OTP فقط للحقل/الحقول التي تغيّرت.
+  /// 1) /updateInfo/request → نرسل فقط الحقول المتغيّرة.
+  /// 2) إذا الإيميل تغيّر → dialog OTP للإيميل.
+  /// 3) إذا الجوال تغيّر → dialog OTP للجوال.
+  /// 4) /updateInfo/verify → نرسل OTPs الحقول المتغيّرة فقط.
+  /// 5) عند النجاح: نحدّث القيم الأصلية ونخرج من وضع التعديل.
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     if (!_hasChanges) return;
+
+    // قيم مُنظَّفة وتمييز ما تغيّر.
+    final newEmail = _emailValue;
+    final newMobile = _mobileValue;
+    final emailChanged = _emailChanged;
+    final mobileChanged = _mobileChanged;
+
     setState(() => _sending = true);
     try {
-      final requestId = await _requestOtps();
+      // نُرسل فقط الحقول المتغيّرة كي لا يصل OTP غير ضروري لحقل لم يتغيّر.
+      final requestId = await _requestOtps(
+        email: emailChanged ? newEmail : null,
+        mobile: mobileChanged ? newMobile : null,
+      );
       if (requestId == null || !mounted) return;
 
-      final emailOtp = await _showOtpModal(
-        title: bi(context, ar: "رمز البريد الإلكتروني", en: "Email code"),
-        subtitle: bi(context,
-            ar: "أُرسل إلى ${_email.text}",
-            en: "Sent to ${_email.text}"),
-        onResend: () => _resendOtp(requestId, "email"),
-      );
-      if (emailOtp == null || !mounted) return;
+      String? emailOtp;
+      if (emailChanged) {
+        emailOtp = await _showOtpModal(
+          title: bi(context, ar: "رمز البريد الإلكتروني", en: "Email code"),
+          subtitle: bi(context,
+              ar: "أُرسل إلى $newEmail", en: "Sent to $newEmail"),
+          onResend: () => _resendOtp(requestId, "email"),
+        );
+        // إن أغلق المستخدم الـ dialog يدوياً → نخرج بدون verify.
+        if (emailOtp == null || !mounted) return;
+      }
 
-      final phoneOtp = await _showOtpModal(
-        title: bi(context, ar: "رمز الجوال", en: "Mobile code"),
-        subtitle: bi(context,
-            ar: "أُرسل إلى ${_mobile.text}",
-            en: "Sent to ${_mobile.text}"),
-        onResend: () => _resendOtp(requestId, "mobile"),
-      );
-      if (phoneOtp == null || !mounted) return;
+      String? phoneOtp;
+      if (mobileChanged) {
+        phoneOtp = await _showOtpModal(
+          title: bi(context, ar: "رمز الجوال", en: "Mobile code"),
+          subtitle: bi(context,
+              ar: "أُرسل إلى $newMobile", en: "Sent to $newMobile"),
+          onResend: () => _resendOtp(requestId, "mobile"),
+        );
+        if (phoneOtp == null || !mounted) return;
+      }
 
       final ok = await _verifyOtps(
         requestId: requestId,
@@ -334,8 +399,12 @@ class _UpdateInfoState extends State<UpdateInfo> {
       );
       if (ok && mounted) {
         setState(() {
-          _initialEmail = _email.text.trim();
-          _initialMobile = _mobile.text.trim();
+          // نحدّث الـ baseline والـ controllers بالقيم المُنظَّفة فقط
+          // (مثلاً إزالة المسافات من الجوال) كي تتطابق UI مع الـ backend.
+          _initialEmail = newEmail;
+          _initialMobile = newMobile;
+          _email.text = newEmail;
+          _mobile.text = newMobile;
           _editing = false;
         });
         _snack(bi(context,
@@ -348,7 +417,10 @@ class _UpdateInfoState extends State<UpdateInfo> {
   }
 
   /// Modal asking for a 6-digit OTP. Resolves with the entered code on
-  /// Verify, or null if the user dismisses.
+  /// Verify, or null if the user dismisses via the explicit close button.
+  ///
+  /// barrierDismissible: false — لمس خارج الـ dialog لا يُغلقه، كي لا يفقد
+  /// المستخدم الـ request_id بالخطأ ويضطر لإعادة طلب OTP جديد.
   Future<String?> _showOtpModal({
     required String title,
     required String subtitle,
@@ -356,7 +428,7 @@ class _UpdateInfoState extends State<UpdateInfo> {
   }) {
     return showDialog<String>(
       context: context,
-      barrierDismissible: true,
+      barrierDismissible: false,
       builder: (_) => _OtpDialog(
         title: title,
         subtitle: subtitle,
@@ -403,14 +475,14 @@ class _UpdateInfoState extends State<UpdateInfo> {
       padding: const EdgeInsets.symmetric(vertical: 24),
       child: Column(
         children: [
-          const Icon(Icons.cloud_off_rounded,
+          Icon(Icons.cloud_off_rounded,
               color: AppColors.muted, size: 40),
           const SizedBox(height: 12),
           Text(
             bi(context,
                 ar: "تعذّر تحميل بياناتك",
                 en: "Couldn't load your information"),
-            style: const TextStyle(color: AppColors.muted),
+            style: TextStyle(color: AppColors.muted),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
@@ -444,8 +516,10 @@ class _UpdateInfoState extends State<UpdateInfo> {
             enabled: _editing && !_sending,
             validator: (value) {
               if (!_editing) return null;
-              if (value == null || value.isEmpty) return t.enteremail;
-              if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+              final v = value?.trim() ?? '';
+              if (v.isEmpty) return t.enteremail;
+              // النمط مُثبَّت بـ ^ و $ كي لا يقبل أحرفاً زائدة بعد الإيميل.
+              if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(v)) {
                 return t.enteremail;
               }
               return null;
@@ -461,8 +535,11 @@ class _UpdateInfoState extends State<UpdateInfo> {
             enabled: _editing && !_sending,
             validator: (value) {
               if (!_editing) return null;
-              if (value == null || value.isEmpty) return t.entermobile;
-              if (!RegExp(r'^\+?\d{9,15}$').hasMatch(value)) {
+              // نُنظّف المسافات والشُرَط قبل التحقق لأن المستخدم قد يكتب
+              // "+966 50 123 4567" — نقبلها لكن نُرسل النسخة المُنظَّفة.
+              final v = (value ?? '').replaceAll(RegExp(r'[\s\-()]'), '');
+              if (v.isEmpty) return t.entermobile;
+              if (!RegExp(r'^\+?\d{9,15}$').hasMatch(v)) {
                 return t.entermobile;
               }
               return null;
@@ -601,7 +678,7 @@ class _OtpDialogState extends State<_OtpDialog> {
             const SizedBox(height: 14),
             Text(
               widget.title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
                 color: AppColors.onSurface,
@@ -611,7 +688,7 @@ class _OtpDialogState extends State<_OtpDialog> {
             Text(
               widget.subtitle,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: AppColors.muted, fontSize: 13),
+              style: TextStyle(color: AppColors.muted, fontSize: 13),
             ),
             const SizedBox(height: 20),
             TextField(
@@ -661,6 +738,18 @@ class _OtpDialogState extends State<_OtpDialog> {
               onPressed: _isFilled
                   ? () => Navigator.pop(context, _controller.text)
                   : null,
+            ),
+            const SizedBox(height: 4),
+            // زر إغلاق صريح — لأن barrierDismissible: false في الـ caller.
+            TextButton(
+              onPressed: () => Navigator.pop(context, null),
+              child: Text(
+                bi(context, ar: "إلغاء", en: "Cancel"),
+                style: TextStyle(
+                  color: AppColors.muted,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ],
         ),

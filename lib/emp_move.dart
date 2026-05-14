@@ -1,3 +1,13 @@
+// ============================================================================
+// ملف: emp_move.dart
+// الغرض: شاشة "حركات المرتب" — الغيابات، الخصومات، البدلات، الاستقطاعات.
+// المحتوى: قائمة بالحركات المالية المؤثرة على الراتب مع ألوان تصنيفية:
+//   - أحمر: غياب / جزاءات / خصومات.
+//   - برتقالي: تأخير / انصراف مبكر.
+//   - أخضر: استحقاقات (بدلات إضافية).
+// API: GET /getmoves?page=N.
+// ============================================================================
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
@@ -10,6 +20,8 @@ import 'widgets.dart';
 
 /// Salary moves screen — absences, deductions, allowances and other
 /// adjustments affecting the employee's payroll.
+///
+/// شاشة حركات المرتب — كل ما يؤثر على راتب الموظف هذا الشهر.
 class EmpMove extends StatefulWidget {
   @override
   _EmpMoveState createState() => _EmpMoveState();
@@ -19,6 +31,8 @@ class _EmpMoveState extends State<EmpMove> {
   final ScrollController _scrollController = ScrollController();
   bool stop = false;
   int _page = 0;
+  // قاموس أنواع الحركات: كود الحركة (من الـ backend) → اسمها بالعربية.
+  // Oracle PYMOVE.MVCD يستعمل هذه الأكواد.
   final Map<int, String> mov = {
     10: 'غياب',
     19: 'عدم بصمة',
@@ -171,7 +185,7 @@ class _EmpMoveState extends State<EmpMove> {
                             children: [
                               Text(
                                 movType,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontWeight: FontWeight.w800,
                                   fontSize: 15,
                                   color: AppColors.onSurface,
@@ -180,12 +194,12 @@ class _EmpMoveState extends State<EmpMove> {
                               const SizedBox(height: 3),
                               Row(
                                 children: [
-                                  const Icon(Icons.calendar_today_rounded,
+                                  Icon(Icons.calendar_today_rounded,
                                       size: 12, color: AppColors.muted),
                                   const SizedBox(width: 4),
                                   Text(
                                     request.date ?? '',
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 12,
                                       color: AppColors.muted,
                                       fontWeight: FontWeight.w500,

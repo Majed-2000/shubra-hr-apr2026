@@ -1,3 +1,10 @@
+// ============================================================================
+// ملف: notification_mgr.dart
+// الغرض: عرض الإعلانات التي بثّها المدير (تاريخ ما أرسله).
+// نفس شكل notifications.dart لكن endpoint مختلف (/mgr/*).
+// FAB: زر "إضافة إعلان" يفتح add_notification.dart.
+// ============================================================================
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -12,6 +19,8 @@ import 'widgets.dart';
 
 /// Manager view of announcements that have been broadcast to the team.
 /// Same shape as [Notifications] but hits the manager-side endpoint.
+///
+/// عرض الإعلانات التي بثّها المدير — مرآة لـ Notifications لكن لـ /mgr/*.
 class NotificationsMgr extends StatefulWidget {
   const NotificationsMgr({super.key});
 
@@ -155,7 +164,7 @@ class _SentNotificationCard extends StatelessWidget {
               children: [
                 Text(
                   item.name ?? '',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w800,
                     fontSize: 15,
                     color: AppColors.onSurface,
@@ -165,7 +174,7 @@ class _SentNotificationCard extends StatelessWidget {
                   const SizedBox(height: 6),
                   Text(
                     item.msg!,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: AppColors.muted,
                       fontSize: 13.5,
                       height: 1.4,
@@ -175,12 +184,12 @@ class _SentNotificationCard extends StatelessWidget {
                 const SizedBox(height: 10),
                 Row(
                   children: [
-                    const Icon(Icons.schedule_rounded,
+                    Icon(Icons.schedule_rounded,
                         size: 13, color: AppColors.muted),
                     const SizedBox(width: 4),
                     Text(
                       formattedDate,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 11.5,
                         color: AppColors.muted,
                         fontWeight: FontWeight.w500,

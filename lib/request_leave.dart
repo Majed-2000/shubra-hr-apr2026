@@ -1,3 +1,19 @@
+// ============================================================================
+// ملف: request_leave.dart
+// الغرض: نموذج طلب إجازة (أكبر ملف في التطبيق — 1240 سطراً).
+// التدفق:
+//   1) جلب أنواع الإجازات المتاحة + الرصيد من /getleavetype.
+//   2) اختيار نوع الإجازة من شبكة VacationTypeCard.
+//   3) اختيار تاريخ البداية (من الغد فأبعد فقط — قاعدة المنتج).
+//   4) اختيار تاريخ العودة (يجب أن يكون بعد تاريخ البداية).
+//   5) كتابة سبب الإجازة (إلزامي).
+//   6) إن كانت إجازة "خاصة" (وفاة، زواج، إنجاب، حج) → مرفق إلزامي.
+//   7) POST /submitleave مع FormData (يدعم رفع الملف).
+// قواعد المنتج (من memory):
+//   - تواريخ الإجازة: من الغد فأبعد فقط (الباك-إند يرفض اليوم نفسه بـ notoday).
+//   - العودة > البداية.
+// ============================================================================
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -18,26 +34,30 @@ import 'widgets.dart';
 /// Leave-request form. Pulls available [LeaveType]s from the backend,
 /// defaults to internal vacation, and enforces an attachment for special
 /// leaves (death, marriage, childbirth, hajj).
+///
+/// نموذج طلب إجازة — يجلب الأنواع المتاحة من الـ backend، يختار "داخلية" افتراضياً،
+/// ويفرض إرفاق ملف للإجازات الخاصة (وفاة/زواج/أمومة/حج).
 class RequestLeave extends StatefulWidget {
   @override
   _RequestLeaveState createState() => _RequestLeaveState();
 }
 
 class _RequestLeaveState extends State<RequestLeave> {
-  final _formKey = GlobalKey<FormState>();
+  // حقل سبب الإجازة (يتم عدّ الحروف فيه).
   final TextEditingController _reason = TextEditingController();
   final dioClient = DioClient().client;
 
-  DateTime? _startDate;
-  DateTime? _returnDate;
-  String? _selectedCode;
-  XFile? _attach;
+  // حالة النموذج:
+  DateTime? _startDate;       // تاريخ بداية الإجازة (من الغد فأبعد).
+  DateTime? _returnDate;      // تاريخ العودة (بعد البداية).
+  String? _selectedCode;      // كود نوع الإجازة المختار (01..07).
+  XFile? _attach;             // المرفق (مطلوب للإجازات الخاصة).
 
-  List<dynamic> _types = [];
-  String _vacBal = "";
-  bool _loading = true;
-  bool _submitting = false;
-  int _letterCount = 0;
+  List<dynamic> _types = [];  // قائمة الأنواع المتاحة من الـ backend.
+  String _vacBal = "";         // رصيد الإجازات المتبقي (نص).
+  bool _loading = true;        // هل التحميل الأولي جارٍ؟
+  bool _submitting = false;    // هل الإرسال جارٍ؟
+  int _letterCount = 0;        // عدد حروف نص السبب (للعرض في UI).
 
   @override
   void initState() {
@@ -59,6 +79,8 @@ class _RequestLeaveState extends State<RequestLeave> {
     }
   }
 
+  /// جلب أنواع الإجازات المتاحة + الرصيد من الـ backend.
+  /// نختار "الداخلية" (02) افتراضياً، وإن لم تكن متاحة نختار أول نوع.
   Future<void> _fetchTypes() async {
     try {
       final response = await dioClient.post('/getleavetype');
@@ -67,6 +89,7 @@ class _RequestLeaveState extends State<RequestLeave> {
         _types = data["vac"] ?? [];
         _vacBal = (data["vacBal"] ?? "").toString();
         if (_types.isNotEmpty) {
+          // البحث عن نوع "02" (الإجازة الداخلية) — الخيار الأكثر شيوعاً.
           final internal = _types.firstWhere(
             (t) => t['vccd']?.toString() == '02',
             orElse: () => _types.first,
@@ -122,33 +145,71 @@ class _RequestLeaveState extends State<RequestLeave> {
 
   void _snack(String m) => SnackbarHelpers.show(context, m);
 
+  /// فتح date picker لاختيار تاريخ البداية أو العودة.
+  /// قاعدة مهمة: لا يمكن اختيار اليوم أو ما قبله — الإجازة تبدأ من الغد
+  /// فأبعد فقط. الباك-إند يرفض طلبات اليوم نفسه بـ "notoday".
+  /// تاريخ العودة يجب أن يكون بعد البداية (يتم إعادة ضبطه إن لم يعد صالحاً).
   Future<void> _pickDate(bool isStart) async {
     final now = DateTime.now();
-    final initial = isStart
-        ? (_startDate ?? now)
-        : (_returnDate ??
-            (_startDate?.add(const Duration(days: 1)) ??
-                now.add(const Duration(days: 1))));
+    final today = DateTime(now.year, now.month, now.day);
+    final tomorrow = today.add(const Duration(days: 1));
+
+    // Earliest selectable date: tomorrow for the start date; the day
+    // after the chosen start for the return date. Today and earlier are
+    // never selectable — leave requests can't be back-dated or same-day.
+    //
+    // أقدم تاريخ يمكن اختياره:
+    //   - للبداية: الغد.
+    //   - للعودة: اليوم التالي لتاريخ البداية.
     final firstDate = isStart
-        ? now.subtract(const Duration(days: 30))
-        : (_startDate ?? now);
+        ? tomorrow
+        : (_startDate?.add(const Duration(days: 1)) ?? tomorrow);
+    final initial = isStart
+        ? (_startDate ?? tomorrow)
+        : (_returnDate ?? firstDate);
 
     final picked = await showDatePicker(
       context: context,
       initialDate: initial.isBefore(firstDate) ? firstDate : initial,
       firstDate: firstDate,
-      lastDate: now.add(const Duration(days: 365 * 2)),
-      builder: (ctx, child) => Theme(
-        data: Theme.of(ctx).copyWith(
-          colorScheme: const ColorScheme.light(
-            primary: AppColors.primary,
-            onPrimary: Colors.white,
-            surface: Colors.white,
-            onSurface: AppColors.onSurface,
+      lastDate: today.add(const Duration(days: 365 * 2)),
+      builder: (ctx, child) {
+        // نبني ColorScheme من الـ theme الحالي كي يحترم dark mode.
+        // surface/onSurface تأتي من AppColors المُتفاعلة مع AppColors._isDark.
+        final dark = AppColors.isDark;
+        final base = dark
+            ? const ColorScheme.dark()
+            : const ColorScheme.light();
+        return Theme(
+          data: Theme.of(ctx).copyWith(
+            colorScheme: base.copyWith(
+              primary: AppColors.primary,
+              onPrimary: Colors.white,
+              surface: AppColors.surface,
+              onSurface: AppColors.onSurface,
+            ),
+            datePickerTheme: DatePickerThemeData(
+              backgroundColor: AppColors.surface,
+              headerBackgroundColor: AppColors.primary,
+              headerForegroundColor: Colors.white,
+              dayForegroundColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.selected)) return Colors.white;
+                if (states.contains(WidgetState.disabled)) {
+                  return AppColors.muted.withOpacity(0.5);
+                }
+                return AppColors.onSurface;
+              }),
+              todayForegroundColor:
+                  WidgetStateProperty.all(AppColors.primary),
+              yearForegroundColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.selected)) return Colors.white;
+                return AppColors.onSurface;
+              }),
+            ),
           ),
-        ),
-        child: child!,
-      ),
+          child: child!,
+        );
+      },
     );
 
     if (picked != null) {
@@ -175,12 +236,20 @@ class _RequestLeaveState extends State<RequestLeave> {
     return LeaveType.fromCode(code)?.localizedName(t) ?? fallback;
   }
 
+  /// فتح معرض الصور لاختيار مرفق (مطلوب للإجازات الخاصة).
   Future<void> _pickAttachment() async {
     final picker = ImagePicker();
     final image = await picker.pickImage(source: ImageSource.gallery);
     if (image != null) setState(() => _attach = image);
   }
 
+  /// إرسال طلب الإجازة عبر POST /submitleave.
+  /// خطوات:
+  ///   1) تحقق من كل الحقول (تاريخ، نوع، سبب، مرفق إن لزم).
+  ///   2) عرض dialog تأكيد للمستخدم.
+  ///   3) بناء FormData مع المرفق (إن وجد).
+  ///   4) إرسال الطلب.
+  ///   5) عند النجاح: pop الشاشة + snackbar نجاح.
   Future<void> _submit() async {
     final t = AppLocalizations.of(context)!;
 
@@ -396,6 +465,7 @@ class _RequestLeaveState extends State<RequestLeave> {
     );
   }
 
+  /// بطاقة عرض رصيد الإجازات الحالي (في أعلى الشاشة).
   Widget _buildBalanceCard(AppLocalizations t) {
     final selectedTotDays = _selectedType['totdays']?.toString();
     return GlassCard(
@@ -418,12 +488,12 @@ class _RequestLeaveState extends State<RequestLeave> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(t.vacbal,
-                    style: const TextStyle(
+                    style: TextStyle(
                         color: AppColors.muted, fontSize: 12.5)),
                 const SizedBox(height: 4),
                 Text(
                   _vacBal.isEmpty ? '—' : _vacBal,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.onSurface,
                     fontWeight: FontWeight.w900,
                     fontSize: 22,
@@ -456,6 +526,7 @@ class _RequestLeaveState extends State<RequestLeave> {
     );
   }
 
+  /// بطاقة اختيار التواريخ — حقلان (بداية + عودة) + ملخّص عدد الأيام.
   Widget _buildDatesCard(BuildContext context) {
     return GlassCard(
       padding: const EdgeInsets.all(16),
@@ -470,7 +541,7 @@ class _RequestLeaveState extends State<RequestLeave> {
               Expanded(
                 child: Text(
                   bi(context, ar: "الفترة", en: "Period"),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14.5,
                     fontWeight: FontWeight.w800,
                     color: AppColors.onSurface,
@@ -529,6 +600,7 @@ class _RequestLeaveState extends State<RequestLeave> {
     );
   }
 
+  /// شبكة بطاقات أنواع الإجازة (VacationTypeCard) — يختار المستخدم واحدة.
   Widget _buildTypeCards(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -542,7 +614,7 @@ class _RequestLeaveState extends State<RequestLeave> {
               const SizedBox(width: 8),
               Text(
                 bi(context, ar: "نوع الإجازة", en: "Vacation type"),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w800,
                   color: AppColors.onSurface,
@@ -561,7 +633,7 @@ class _RequestLeaveState extends State<RequestLeave> {
                     ar: "لا توجد أنواع إجازات متاحة",
                     en: "No vacation types available"),
                 style:
-                    const TextStyle(color: AppColors.muted, fontSize: 13),
+                    TextStyle(color: AppColors.muted, fontSize: 13),
               ),
             ),
           )
@@ -599,8 +671,8 @@ class _RequestLeaveState extends State<RequestLeave> {
     );
   }
 
+  /// بطاقة كتابة سبب الإجازة (متعدد الأسطر + عداد حروف).
   Widget _buildReasonCard(BuildContext context) {
-    final t = AppLocalizations.of(context)!;
     final enough = _letterCount >= 5;
     return GlassCard(
       padding: const EdgeInsets.all(16),
@@ -615,7 +687,7 @@ class _RequestLeaveState extends State<RequestLeave> {
               Expanded(
                 child: Text(
                   bi(context, ar: "سبب الإجازة", en: "Reason"),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14.5,
                     fontWeight: FontWeight.w800,
                     color: AppColors.onSurface,
@@ -676,6 +748,8 @@ class _RequestLeaveState extends State<RequestLeave> {
     );
   }
 
+  /// تنبيه يظهر فقط للإجازات الخاصة (وفاة، زواج، ...) لإعلام المستخدم
+  /// بأن المرفق إلزامي.
   Widget _buildSpecialTypeNotice(BuildContext context) {
     final typeName = _localizedTypeName(context, _selectedCode ?? '', '');
     return Container(
@@ -715,7 +789,7 @@ class _RequestLeaveState extends State<RequestLeave> {
                   bi(context,
                       ar: "تنبيه: نوع إجازة خاص",
                       en: "Warning: Special vacation type"),
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.onSurface,
                     fontWeight: FontWeight.w800,
                     fontSize: 14,
@@ -728,7 +802,7 @@ class _RequestLeaveState extends State<RequestLeave> {
                           "اخترت «$typeName» وهي ليست إجازة خارجية أو داخلية. لها شروط خاصة وقد تتطلب موافقة إضافية من الإدارة. تأكد من اختيارك قبل المتابعة.",
                       en:
                           "You selected \"$typeName\" which is not a regular external or internal vacation. It has special conditions and may require extra approval. Please make sure this is what you want."),
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.onSurface,
                     fontSize: 12.5,
                     height: 1.5,
@@ -742,8 +816,9 @@ class _RequestLeaveState extends State<RequestLeave> {
     );
   }
 
+  /// عرض dialog تأكيد قبل إرسال الطلب — يلخّص كل البيانات للمستخدم.
+  /// يعود true إن أكّد المستخدم، false إن ألغى.
   Future<bool> _showConfirmation() async {
-    final t = AppLocalizations.of(context)!;
     final typeName = _localizedTypeName(
         context, _selectedCode ?? '', _selectedType['vcnma']?.toString() ?? '');
     final startStr = DateFormat('EEE, dd MMM yyyy').format(_startDate!);
@@ -908,7 +983,7 @@ class _RequestLeaveState extends State<RequestLeave> {
                                         : bi(context,
                                             ar: "لا ينخصم من رصيدك",
                                             en: "Not deducted"),
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       color: AppColors.muted,
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600,
@@ -925,7 +1000,7 @@ class _RequestLeaveState extends State<RequestLeave> {
                                                 "$days يوم — إجازة خاصة لا تخصم من الرصيد",
                                             en:
                                                 "$days days — special leave, no balance impact"),
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       color: AppColors.onSurface,
                                       fontSize: 14.5,
                                       fontWeight: FontWeight.w800,
@@ -941,7 +1016,7 @@ class _RequestLeaveState extends State<RequestLeave> {
                       const SizedBox(height: 12),
                       Text(
                         bi(context, ar: "سبب الإجازة", en: "Reason"),
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: AppColors.muted,
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
@@ -957,7 +1032,7 @@ class _RequestLeaveState extends State<RequestLeave> {
                         ),
                         child: Text(
                           _reason.text.trim(),
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: AppColors.onSurface,
                             fontSize: 13.5,
                             height: 1.5,
@@ -977,7 +1052,7 @@ class _RequestLeaveState extends State<RequestLeave> {
                                 _attach!.path.split('/').last,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   color: AppColors.muted,
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
@@ -1013,7 +1088,7 @@ class _RequestLeaveState extends State<RequestLeave> {
                                           "أنت تطلب إجازة خاصة ($typeName). تأكد من اختيارك جيداً.",
                                       en:
                                           "You are requesting a special leave ($typeName). Double-check your choice."),
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     color: AppColors.onSurface,
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,
@@ -1042,7 +1117,7 @@ class _RequestLeaveState extends State<RequestLeave> {
                         style: OutlinedButton.styleFrom(
                           padding:
                               const EdgeInsets.symmetric(vertical: 14),
-                          side: const BorderSide(
+                          side: BorderSide(
                               color: AppColors.border, width: 1.2),
                           foregroundColor: AppColors.onSurface,
                         ),
@@ -1103,7 +1178,7 @@ class _RequestLeaveState extends State<RequestLeave> {
               children: [
                 Text(
                   label,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.muted,
                     fontSize: 11.5,
                     fontWeight: FontWeight.w600,
@@ -1112,7 +1187,7 @@ class _RequestLeaveState extends State<RequestLeave> {
                 const SizedBox(height: 2),
                 Text(
                   value,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.onSurface,
                     fontSize: 14,
                     fontWeight: FontWeight.w800,
@@ -1126,6 +1201,7 @@ class _RequestLeaveState extends State<RequestLeave> {
     );
   }
 
+  /// بطاقة اختيار مرفق (صورة من المعرض) — تظهر للإجازات الخاصة فقط.
   Widget _buildAttachmentCard(BuildContext context, AppLocalizations t) {
     final hasFile = _attach != null;
     final required = _attachmentRequired;
@@ -1165,7 +1241,7 @@ class _RequestLeaveState extends State<RequestLeave> {
                         hasFile
                             ? bi(context, ar: "تم الإرفاق", en: "Attached")
                             : t.attach,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.w800,
                           fontSize: 14.5,
                           color: AppColors.onSurface,
@@ -1221,12 +1297,12 @@ class _RequestLeaveState extends State<RequestLeave> {
           ),
           if (hasFile)
             IconButton(
-              icon: const Icon(Icons.close_rounded,
+              icon: Icon(Icons.close_rounded,
                   size: 20, color: AppColors.muted),
               onPressed: () => setState(() => _attach = null),
             )
           else
-            const Icon(Icons.chevron_right_rounded,
+            Icon(Icons.chevron_right_rounded,
                 color: AppColors.muted),
         ],
       ),

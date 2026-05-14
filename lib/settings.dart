@@ -1,3 +1,10 @@
+// ============================================================================
+// ملف: settings.dart
+// الغرض: شاشة الإعدادات — تبديل اللغة، إدارة الحساب، تسجيل الخروج.
+// ميزة خاصة (Admin): "تبديل المستخدم" (impersonation) — يظهر فقط للأكواد
+// المُدرَجة في AppConfig.adminEmpcodes. الـ backend يفرض الصلاحية فعلياً.
+// ============================================================================
+
 import 'package:dio/dio.dart' show DioException, Options;
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -91,7 +98,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       "حفظ جلستك الحالية ويمكنك العودة إليها لاحقًا.",
                   en: "Enter the employee number you want to log in as. "
                       "Your current session is saved and can be restored."),
-              style: const TextStyle(fontSize: 13, color: AppColors.muted),
+              style: TextStyle(fontSize: 13, color: AppColors.muted),
             ),
             const SizedBox(height: 16),
             TextField(
@@ -352,7 +359,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const SizedBox(height: 12),
               Text(
                 '${ar ? "كود الخطأ" : "Error code"}: $httpCode',
-                style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                style: TextStyle(color: AppColors.muted, fontSize: 12),
               ),
             ],
           ],
@@ -429,7 +436,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     localeNotifier.value = Locale(newLocale);
                   },
                 ),
-                const Divider(height: 1, color: AppColors.border),
+                Divider(height: 1, color: AppColors.border),
                 _SettingTile(
                   icon: Icons.notifications_outlined,
                   iconColor: AppColors.primary,
@@ -452,7 +459,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   title: t.myinfo,
                   onTap: () => Navigator.pushNamed(context, "/profile"),
                 ),
-                const Divider(height: 1, color: AppColors.border),
+                Divider(height: 1, color: AppColors.border),
                 _SettingTile(
                   icon: Icons.manage_accounts_rounded,
                   iconColor: AppColors.secondary,
@@ -460,7 +467,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   onTap: () =>
                       Navigator.pushNamed(context, "/updateInfo"),
                 ),
-                const Divider(height: 1, color: AppColors.border),
+                Divider(height: 1, color: AppColors.border),
                 _SettingTile(
                   icon: Icons.devices_other_rounded,
                   iconColor: AppColors.warning,
@@ -500,7 +507,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ar: "حول تطبيق شبرا", en: "About Shubra HR"),
                   onTap: () => Navigator.pushNamed(context, "/about"),
                 ),
-                const Divider(height: 1, color: AppColors.border),
+                Divider(height: 1, color: AppColors.border),
                 _SettingTile(
                   icon: Icons.shield_outlined,
                   iconColor: AppColors.success,
@@ -524,7 +531,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             },
           ),
           const SizedBox(height: 16),
-          const Center(
+          Center(
             child: Text(
               "v2.0.0",
               style: TextStyle(
@@ -580,7 +587,7 @@ class _SettingTile extends StatelessWidget {
               Expanded(
                 child: Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14.5,
                     fontWeight: FontWeight.w600,
                     color: AppColors.onSurface,

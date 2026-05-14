@@ -1,3 +1,14 @@
+// ============================================================================
+// ملف: attendance.dart
+// الغرض: شاشة سجل الحضور الشهري للموظف.
+// المحتوى:
+//   - شبكة لكل أيام الشهر مع: الدخول، الخروج، المدة، حالة (مكتمل/ناقص).
+//   - فلتر للشهر والسنة (تبديل شهر/سنة عبر date picker).
+//   - عند الضغط على يوم: dialog يعرض كل بصمات اليوم (in/out متعددة).
+// API: /attendance?month=X&year=Y → قائمة AttendanceDay.
+// ألوان: أخضر (دخول)، أحمر (خروج)، برتقالي (ناقص).
+// ============================================================================
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -12,6 +23,8 @@ import 'widgets.dart';
 
 /// Employee attendance log — daily fingerprint records with month/year
 /// filter and a per-day "View All" dialog showing every punch.
+///
+/// سجل حضور الموظف الشهري — بصمات يومية مع تفاصيل عند الضغط.
 class Attendance extends StatefulWidget {
   const Attendance({super.key});
 
@@ -194,7 +207,7 @@ class _AttendanceState extends State<Attendance> {
                   Expanded(
                     child: Text(
                       "${t.allRecords} — ${_formatDateLabel(day.date)}",
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w800,
                         color: AppColors.onSurface,
@@ -267,7 +280,7 @@ class _DayCard extends StatelessWidget {
               const SizedBox(width: 8),
               Text(
                 _AttendanceState._formatDateLabel(day.date),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w800,
                   color: AppColors.onSurface,
@@ -353,7 +366,7 @@ class _TimeChip extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 11,
                     color: AppColors.muted,
                     fontWeight: FontWeight.w600,
@@ -398,7 +411,7 @@ class _RecordRow extends StatelessWidget {
           Expanded(
             child: Text(
               meta.label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13.5,
                 fontWeight: FontWeight.w700,
                 color: AppColors.onSurface,
@@ -477,7 +490,7 @@ class _DropdownTile<T> extends StatelessWidget {
         children: [
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 11,
               color: AppColors.muted,
               fontWeight: FontWeight.w600,
@@ -490,7 +503,7 @@ class _DropdownTile<T> extends StatelessWidget {
               isExpanded: true,
               items: items,
               onChanged: onChanged,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w800,
                 color: AppColors.onSurface,

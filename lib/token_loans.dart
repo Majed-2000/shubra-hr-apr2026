@@ -1,4 +1,10 @@
-import 'package:dio/dio.dart';
+// ============================================================================
+// ملف: token_loans.dart
+// الغرض: عرض القروض النشطة (المصروفة) مع تقدّم السداد.
+// المحتوى: قرض واحد = مبلغ كلي + المسدد + المتبقي.
+// API: GET /tokenLoans?page=N.
+// ============================================================================
+
 import 'package:flutter/material.dart';
 import 'package:shubraepp/tloan.dart';
 
@@ -8,6 +14,8 @@ import 'theme.dart';
 import 'widgets.dart';
 
 /// Active loans screen — disbursed loans with paid vs outstanding amounts.
+///
+/// شاشة القروض النشطة — القروض المصروفة وحالة سدادها.
 class TokenLoans extends StatefulWidget {
   @override
   _TokenLoansState createState() => _TokenLoansState();
@@ -120,7 +128,7 @@ class _TokenLoansState extends State<TokenLoans> {
                                 children: [
                                   Text(
                                     '${item.amount ?? 0}',
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 20,
                                       fontWeight: FontWeight.w900,
                                       color: AppColors.onSurface,
@@ -129,7 +137,7 @@ class _TokenLoansState extends State<TokenLoans> {
                                   const SizedBox(height: 2),
                                   Text(
                                     "${t.date}: ${item.date ?? ''}",
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       color: AppColors.muted,
                                       fontSize: 12,
                                       fontWeight: FontWeight.w500,
@@ -147,7 +155,7 @@ class _TokenLoansState extends State<TokenLoans> {
                           ],
                         ),
                         const SizedBox(height: 10),
-                        const Divider(height: 1, color: AppColors.border),
+                        Divider(height: 1, color: AppColors.border),
                         const SizedBox(height: 6),
                         DetailRow(
                           icon: Icons.tag_rounded,

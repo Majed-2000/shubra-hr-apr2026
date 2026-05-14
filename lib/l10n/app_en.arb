@@ -147,5 +147,11 @@
   "callBtn": "Call",
   "emailBtn": "Email",
   "callFailed": "Could not start the call",
-  "emailFailed": "Could not open the email app"
+  "emailFailed": "Could not open the email app",
+  "manualPunchTitle": "Manual Punch",
+  "manualPunchEmpcode": "Employee ID",
+  "manualPunchCheckIn": "Check In",
+  "manualPunchCheckOut": "Check Out",
+  "manualPunchSuccess": "Punch recorded successfully",
+  "manualPunchFailed": "Failed to record punch"
 }

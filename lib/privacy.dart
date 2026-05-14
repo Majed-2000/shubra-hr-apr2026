@@ -1,9 +1,17 @@
+// ============================================================================
+// ملف: privacy.dart
+// الغرض: صفحة "الخصوصية والأمان" — معلومات قانونية + مسؤولية المستخدم.
+// المحتوى ثابت (لا API) — أقسام نصية تشرح: OTP، حماية الحساب، التعامل مع البيانات.
+// ============================================================================
+
 import 'package:flutter/material.dart';
 
 import 'theme.dart';
 import 'widgets.dart';
 
 /// Privacy & Security — OTP responsibility, account safety, data handling.
+///
+/// صفحة الخصوصية والأمان — نصوص قانونية ثابتة.
 class PrivacyScreen extends StatelessWidget {
   const PrivacyScreen({super.key});
 
@@ -31,7 +39,7 @@ class PrivacyScreen extends StatelessWidget {
                       "الموظف يتحمل المسؤولية الكاملة عند مشاركة رمز التحقق (OTP) مع أي طرف آخر. مشاركة الرمز ممنوعة من الأساس، وفي حال حدوث ذلك، لن نتحمل أي مسؤولية عن سوء الاستخدام الذي قد ينتج عنها.",
                   en:
                       "The employee is fully responsible for sharing the OTP with any third party. Sharing the code is forbidden in the first place; if it does happen, we will not be liable for any misuse that follows."),
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.onSurface,
                 fontSize: 14,
                 height: 1.7,
@@ -89,7 +97,7 @@ class PrivacyScreen extends StatelessWidget {
                       "بياناتك محفوظة على خوادم شبرا، وتُستخدم فقط لتشغيل خدمات الموارد البشرية (الإجازات، السلف، الحضور، الرواتب). لا نبيع بياناتك ولا نشاركها مع أي طرف خارجي.",
                   en:
                       "Your data is stored on Shubra servers and is used only to run our HR services (leaves, loans, attendance, payroll). We never sell or share it with any third party."),
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.onSurface,
                 fontSize: 14,
                 height: 1.7,
@@ -102,7 +110,7 @@ class PrivacyScreen extends StatelessWidget {
               bi(context,
                   ar: "الإصدار 1.0 — قد يُحدَّث بدون إشعار مسبق.",
                   en: "v1.0 — may be updated without notice."),
-              style: const TextStyle(color: AppColors.muted, fontSize: 11.5),
+              style: TextStyle(color: AppColors.muted, fontSize: 11.5),
             ),
           ),
           const SizedBox(height: 16),
@@ -137,7 +145,7 @@ class _Bullet extends StatelessWidget {
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.onSurface,
                 fontSize: 13.5,
                 height: 1.55,

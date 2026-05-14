@@ -1,3 +1,12 @@
+// ============================================================================
+// ملف: profile.dart
+// الغرض: شاشة الملف الشخصي للموظف:
+//   - صورة + اسم + الوظيفة.
+//   - رصيد الإجازات.
+//   - بطاقة مالية (راتب، بنك، IBAN) — مخفية افتراضياً، تُظهَر عند الضغط.
+// API: /myinfoview (موظف) أو /mgr/myinfoview (مدير).
+// ============================================================================
+
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -9,6 +18,8 @@ import 'widgets.dart';
 
 /// Profile screen — avatar, identity, vacation balance, and a
 /// tap-to-reveal financial card (salary / bank / IBAN, masked by default).
+///
+/// شاشة البروفايل: صورة + هوية + رصيد إجازات + بطاقة مالية (مخفية افتراضياً).
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
@@ -32,12 +43,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _load();
   }
 
+  /// تحميل بيانات الملف:
+  /// 1) قراءة الاسم والـ view (user/mgr) من storage.
+  /// 2) اختيار endpoint مناسب حسب الـ view.
+  /// 3) جلب البيانات وملء info.
   Future<void> _load() async {
     final n = await _storage.read(key: "name");
     final tp = await _storage.read(key: "current_view");
     if (n != null) name = n;
     if (tp != null) type = tp;
     try {
+      // /mgr/myinfoview للمدير، /myinfoview للموظف.
       final path = type == "mgr" ? '/mgr/myinfoview' : '/myinfoview';
       final response = await dioClient.get(path);
       if (response.statusCode == 201) {
@@ -119,7 +135,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             Text(
                               fullName.isEmpty ? name : fullName,
                               textAlign: TextAlign.center,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w800,
                                 color: AppColors.onSurface,
@@ -163,14 +179,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 icon: Icons.badge_outlined,
                                 label: t.empcode,
                                 value: '${profileInfo['emcd'] ?? ''}'),
-                            const Divider(
+                            Divider(
                                 height: 1, color: AppColors.border),
                             InfoTile(
                                 icon: Icons.phone_iphone_rounded,
                                 label: t.mobile,
                                 value: '${profileInfo['empmob'] ?? ''}'),
+                            Divider(
+                                height: 1, color: AppColors.border),
+                            InfoTile(
+                                icon: Icons.email_outlined,
+                                label: t.email,
+                                value: _safeName(profileInfo['email'] ??
+                                    profileInfo['empml'] ??
+                                    profileInfo['ememl'])),
                             if (type != 'mgr') ...[
-                              const Divider(
+                              Divider(
                                   height: 1, color: AppColors.border),
                               InfoTile(
                                   icon: Icons.beach_access_outlined,
@@ -277,11 +301,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Column(
               children: [
                 _profileSkeletonRow(),
-                const Divider(height: 1, color: AppColors.border),
+                Divider(height: 1, color: AppColors.border),
                 _profileSkeletonRow(),
-                const Divider(height: 1, color: AppColors.border),
+                Divider(height: 1, color: AppColors.border),
                 _profileSkeletonRow(),
-                const Divider(height: 1, color: AppColors.border),
+                Divider(height: 1, color: AppColors.border),
                 _profileSkeletonRow(),
               ],
             ),
@@ -344,7 +368,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     Widget revealValue(String raw) {
       return Text(
         _revealFinance ? (raw.isEmpty ? '—' : raw) : mask(raw),
-        style: const TextStyle(
+        style: TextStyle(
           color: AppColors.onSurface,
           fontWeight: FontWeight.w700,
           fontSize: 14,
@@ -395,7 +419,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           bi(context,
                               ar: "التفاصيل المالية",
                               en: "Financial details"),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontWeight: FontWeight.w800,
                             fontSize: 14.5,
                             color: AppColors.onSurface,
@@ -406,7 +430,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           bi(context,
                               ar: "اضغط للكشف — لحفظ الخصوصية",
                               en: "Tap to reveal — keeps data private"),
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: AppColors.muted,
                             fontSize: 12,
                           ),
@@ -425,7 +449,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
           ),
-          const Divider(height: 1, color: AppColors.border),
+          Divider(height: 1, color: AppColors.border),
           Padding(
             padding: const EdgeInsets.symmetric(
                 horizontal: 18, vertical: 4),
@@ -436,13 +460,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   label: t.basicsal,
                   child: revealValue(salaryStr),
                 ),
-                const Divider(height: 1, color: AppColors.border),
+                Divider(height: 1, color: AppColors.border),
                 _financeRow(
                   icon: Icons.account_balance_outlined,
                   label: t.bankno,
                   child: revealValue(bank),
                 ),
-                const Divider(height: 1, color: AppColors.border),
+                Divider(height: 1, color: AppColors.border),
                 _financeRow(
                   icon: Icons.credit_card_outlined,
                   label: t.iban,
@@ -480,7 +504,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             flex: 4,
             child: Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.muted,
                 fontWeight: FontWeight.w500,
                 fontSize: 13.5,

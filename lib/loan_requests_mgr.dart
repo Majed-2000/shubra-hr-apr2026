@@ -1,3 +1,9 @@
+// ============================================================================
+// ملف: loan_requests_mgr.dart
+// الغرض: قائمة طلبات القروض المعلّقة للمدير (موافقة/رفض).
+// API: GET /mgr/getLoanRequests?page=N + POST /mgr/approveLoan / /mgr/refuseLoan.
+// ============================================================================
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:shubraepp/loan.dart';
@@ -9,6 +15,8 @@ import 'theme.dart';
 import 'widgets.dart';
 
 /// Manager queue for approving or refusing employee loan requests.
+///
+/// قائمة الموافقة على القروض للمدير.
 class LoanrequestsMgr extends StatefulWidget {
   @override
   _LoanrequestsMgrState createState() => _LoanrequestsMgrState();
@@ -165,7 +173,7 @@ class _LoanrequestsMgrState extends State<LoanrequestsMgr> {
                                 children: [
                                   Text(
                                     r.empname ?? '-',
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontWeight: FontWeight.w800,
                                       fontSize: 15,
                                       color: AppColors.onSurface,
@@ -174,7 +182,7 @@ class _LoanrequestsMgrState extends State<LoanrequestsMgr> {
                                   const SizedBox(height: 2),
                                   Text(
                                     "${t.empcode}: ${r.emcd ?? ''}",
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       color: AppColors.muted,
                                       fontSize: 12,
                                       fontWeight: FontWeight.w500,
@@ -188,7 +196,7 @@ class _LoanrequestsMgrState extends State<LoanrequestsMgr> {
                           ],
                         ),
                         const SizedBox(height: 10),
-                        const Divider(height: 1, color: AppColors.border),
+                        Divider(height: 1, color: AppColors.border),
                         const SizedBox(height: 8),
                         DetailRow(
                           icon: Icons.payments_rounded,

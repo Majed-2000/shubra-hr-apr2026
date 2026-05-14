@@ -441,4 +441,22 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get emailFailed => 'تعذّر فتح تطبيق البريد';
+
+  @override
+  String get manualPunchTitle => 'تسجيل بصمة يدوية';
+
+  @override
+  String get manualPunchEmpcode => 'الرقم الوظيفي';
+
+  @override
+  String get manualPunchCheckIn => 'تسجيل حضور';
+
+  @override
+  String get manualPunchCheckOut => 'تسجيل انصراف';
+
+  @override
+  String get manualPunchSuccess => 'تم تسجيل البصمة بنجاح';
+
+  @override
+  String get manualPunchFailed => 'تعذّر تسجيل البصمة';
 }

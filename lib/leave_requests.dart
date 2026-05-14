@@ -1,3 +1,10 @@
+// ============================================================================
+// ملف: leave_requests.dart
+// الغرض: عرض قائمة بطلبات الإجازة التي قدّمها الموظف الحالي + حالتها.
+// المحتوى: قائمة قابلة للترقيم (pagination) مع scroll-to-load-more.
+// API: POST /getmylve (paginated عبر page parameter).
+// ============================================================================
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
@@ -9,6 +16,8 @@ import 'theme.dart';
 import 'widgets.dart';
 
 /// Paginated history of the current employee's leave requests with status.
+///
+/// قائمة طلبات إجازات الموظف الحالي (paginated) مع الحالة.
 class Leaverequests extends StatefulWidget {
   @override
   _LeaverequestsState createState() => _LeaverequestsState();
@@ -16,10 +25,10 @@ class Leaverequests extends StatefulWidget {
 
 class _LeaverequestsState extends State<Leaverequests> {
   final ScrollController _scrollController = ScrollController();
-  bool stop = false;
-  int _page = 0;
+  bool stop = false;             // علم: هل وصلنا لآخر صفحة؟ (يوقف الـ pagination).
+  int _page = 0;                 // رقم الصفحة الحالية.
   final dioClient = DioClient().client;
-  List<Leave> Lrequests = [];
+  List<Leave> Lrequests = [];   // كل الطلبات المُحمّلة حتى الآن.
 
   @override
   void initState() {
@@ -28,6 +37,7 @@ class _LeaverequestsState extends State<Leaverequests> {
     setState(() {
       _page = _page + 1;
     });
+    // تنصت على الـ scroll لجلب الصفحة التالية عند الاقتراب من النهاية.
     _scrollController.addListener(() {
       if (_scrollController.position.pixels >=
           _scrollController.position.maxScrollExtent - 100) {
@@ -49,8 +59,7 @@ class _LeaverequestsState extends State<Leaverequests> {
       if (data['leaverequests'].length > 0) {
         for (var x = 0; x < data['leaverequests'].length; x++) {
           Leave l = Leave();
-          if (data['leaverequests'][x]['status'] == "y" &&
-              data['leaverequests'][x]['status'] != null) {
+          if (data['leaverequests'][x]['status'] == "y") {
             l.status = AppLocalizations.of(context)!.accepted;
           } else if (data['leaverequests'][x]['status'] == "n") {
             l.status = AppLocalizations.of(context)!.refused;
@@ -138,7 +147,7 @@ class _LeaverequestsState extends State<Leaverequests> {
                             Expanded(
                               child: Text(
                                 item.type ?? '-',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w800,
                                   color: AppColors.onSurface,
@@ -150,7 +159,7 @@ class _LeaverequestsState extends State<Leaverequests> {
                           ],
                         ),
                         const SizedBox(height: 10),
-                        const Divider(height: 1, color: AppColors.border),
+                        Divider(height: 1, color: AppColors.border),
                         const SizedBox(height: 8),
                         DetailRow(
                           icon: Icons.flight_takeoff_rounded,
@@ -178,7 +187,7 @@ class _LeaverequestsState extends State<Leaverequests> {
                         ),
                         if (item.status_date != null) ...[
                           const SizedBox(height: 6),
-                          const Divider(height: 1, color: AppColors.border),
+                          Divider(height: 1, color: AppColors.border),
                           const SizedBox(height: 8),
                           DetailRow(
                             icon: Icons.event_available_rounded,

@@ -1,3 +1,10 @@
+// ============================================================================
+// ملف: custody.dart
+// الغرض: عرض قائمة العُهد (الأصول) المسلمة للموظف.
+// أمثلة: لابتوب، هاتف، مفاتيح مكتب، سيارة شركة.
+// API: GET /getMyCustody?page=N (paginated).
+// ============================================================================
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
@@ -8,6 +15,8 @@ import 'theme.dart';
 import 'widgets.dart';
 
 /// Lists the items currently assigned to the employee with issue dates.
+///
+/// قائمة العُهد المسلمة للموظف مع تاريخ التسليم.
 class Custody extends StatefulWidget {
   @override
   _CustodyState createState() => _CustodyState();
@@ -124,7 +133,7 @@ class _CustodyState extends State<Custody> {
                             children: [
                               Text(
                                 item.name ?? '-',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontWeight: FontWeight.w800,
                                   fontSize: 15,
                                   color: AppColors.onSurface,
@@ -133,13 +142,13 @@ class _CustodyState extends State<Custody> {
                               const SizedBox(height: 4),
                               Row(
                                 children: [
-                                  const Icon(Icons.calendar_today_rounded,
+                                  Icon(Icons.calendar_today_rounded,
                                       size: 13,
                                       color: AppColors.muted),
                                   const SizedBox(width: 5),
                                   Text(
                                     item.date ?? '',
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 12.5,
                                       color: AppColors.muted,
                                       fontWeight: FontWeight.w500,

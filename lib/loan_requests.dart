@@ -1,3 +1,9 @@
+// ============================================================================
+// ملف: loan_requests.dart
+// الغرض: عرض قائمة طلبات القروض التي قدّمها الموظف الحالي + حالتها.
+// API: GET /getMyLoans?page=N (paginated).
+// ============================================================================
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:shubraepp/loan.dart';
@@ -9,6 +15,8 @@ import 'theme.dart';
 import 'widgets.dart';
 
 /// Paginated history of the current employee's loan requests.
+///
+/// قائمة طلبات قروض الموظف الحالي (paginated).
 class Loanrequests extends StatefulWidget {
   @override
   _LoanrequestsState createState() => _LoanrequestsState();
@@ -152,7 +160,7 @@ class _LoanrequestsState extends State<Loanrequests> {
                                 children: [
                                   Text(
                                     "${r.loanamount ?? 0}",
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.w900,
                                       color: AppColors.onSurface,
@@ -161,7 +169,7 @@ class _LoanrequestsState extends State<Loanrequests> {
                                   const SizedBox(height: 2),
                                   Text(
                                     r.loandate ?? '',
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       color: AppColors.muted,
                                       fontSize: 12.5,
                                       fontWeight: FontWeight.w500,
@@ -176,7 +184,7 @@ class _LoanrequestsState extends State<Loanrequests> {
                         ),
                         if (r.status_date != null) ...[
                           const SizedBox(height: 10),
-                          const Divider(height: 1, color: AppColors.border),
+                          Divider(height: 1, color: AppColors.border),
                           const SizedBox(height: 6),
                           DetailRow(
                             icon: Icons.event_available_rounded,

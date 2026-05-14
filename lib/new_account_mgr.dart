@@ -1,3 +1,10 @@
+// ============================================================================
+// ملف: new_account_mgr.dart
+// الغرض: شاشة إنشاء حساب مدير (admin) عبر POST /mgr/register.
+// الفرق عن new_account.dart: نطاق "manager" بدلاً من "user"؛ ينتقل إلى /homeMgr.
+// متى يُستخدم: عند تسجيل مدير جديد في النظام.
+// ============================================================================
+
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dio_client.dart';
@@ -8,6 +15,8 @@ import 'theme.dart';
 import 'widgets.dart';
 
 /// Manager registration: email + IQAMA + password.
+///
+/// تسجيل مدير جديد عبر بريد + إقامة + كلمة مرور.
 class NewAccountMGR extends StatefulWidget {
   @override
   State<NewAccountMGR> createState() => _NewAccountMGRState();
@@ -22,12 +31,24 @@ class _NewAccountMGRState extends State<NewAccountMGR> {
   final _storage = const FlutterSecureStorage();
   bool _sending = false;
 
+  @override
+  void dispose() {
+    _employeeIdController.dispose();
+    _passwordController.dispose();
+    _iqama.dispose();
+    super.dispose();
+  }
+
   void _snack(String m) => SnackbarHelpers.show(context, m);
 
+  /// إرسال نموذج تسجيل المدير.
+  /// POST /mgr/register → عند النجاح يستلم tokens بنطاق "manager"
+  /// ويُحوَّل إلى /homeMgr (لوحة المدير، ليست لوحة الموظف).
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _sending = true);
     try {
+      // POST مع البيانات (email هنا هو رقم الموظف رغم اسمه — تاريخي).
       final response = await dioClient.post('/mgr/register', data: {
         'email': _employeeIdController.text,
         'iqama': _iqama.text,
@@ -38,12 +59,18 @@ class _NewAccountMGRState extends State<NewAccountMGR> {
         if (data['error'] != null) {
           _snack(AppLocalizations.of(context)!.wronginfo);
         } else {
+          // تخزين tokens المدير في الـ scope الصحيح (mgr_*) — ليس access_token العام.
+          // كتابة access_token/refresh_token مع type:"mgr" تُسبب force-logout
+          // عند فتح التطبيق مرة أخرى (SplashScreen يكشف legacy type).
           await _storage.write(
-              key: 'access_token', value: data['access_token']);
+              key: 'mgr_access_token', value: data['access_token']);
           await _storage.write(
-              key: 'refresh_token', value: data['refresh_token']);
-          await _storage.write(key: 'type', value: "mgr");
+              key: 'mgr_refresh_token', value: data['refresh_token']);
+          // current_view يحدد أي tokens تُستخدم في DioClient.
+          await _storage.write(key: 'current_view', value: 'mgr');
+          await _storage.write(key: 'is_manager', value: 'true');
           await _storage.write(key: 'name', value: data['mgr']['name']);
+          if (!mounted) return;
           Navigator.pushReplacementNamed(context, '/homeMgr');
         }
       }
@@ -58,7 +85,6 @@ class _NewAccountMGRState extends State<NewAccountMGR> {
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!;
     final currentLang = Localizations.localeOf(context).languageCode;
-    final size = MediaQuery.of(context).size;
 
     return Scaffold(
       backgroundColor: AppColors.bg,
@@ -75,7 +101,7 @@ class _NewAccountMGRState extends State<NewAccountMGR> {
                     child: InkWell(
                       customBorder: const CircleBorder(),
                       onTap: () => Navigator.pop(context),
-                      child: const Padding(
+                      child: Padding(
                         padding: EdgeInsets.all(9),
                         child: Icon(Icons.arrow_back_ios_new_rounded,
                             color: AppColors.onSurface, size: 18),
@@ -100,12 +126,12 @@ class _NewAccountMGRState extends State<NewAccountMGR> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.language,
+                            Icon(Icons.language,
                                 size: 16, color: AppColors.onSurface),
                             const SizedBox(width: 6),
                             Text(
                               currentLang == 'ar' ? 'English' : 'العربية',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: AppColors.onSurface,
                                 fontWeight: FontWeight.w600,
                                 fontSize: 13,
@@ -131,7 +157,7 @@ class _NewAccountMGRState extends State<NewAccountMGR> {
               const SizedBox(height: 16),
               Text(
                 t.newaccountreg,
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppColors.onSurface,
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
@@ -140,7 +166,7 @@ class _NewAccountMGRState extends State<NewAccountMGR> {
               const SizedBox(height: 4),
               Text(
                 bi(context, ar: "إنشاء حساب مدير", en: "Manager registration"),
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppColors.muted,
                   fontSize: 14,
                 ),
@@ -179,7 +205,7 @@ class _NewAccountMGRState extends State<NewAccountMGR> {
                             children: [
                               Text(
                                 t.password,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 13.5,
                                   fontWeight: FontWeight.w700,
                                   color: AppColors.onSurface,

@@ -18,13 +18,17 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        // Java 17 — Java 8 is deprecated in modern JDKs and produces "source/target
+        // value 8 is obsolete" warnings. AGP 8.9 fully supports Java 17, and core
+        // library desugaring (below) keeps backward compat for `java.time` etc. on
+        // older Android runtimes (min SDK 21).
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
         isCoreLibraryDesugaringEnabled = true
     }
 
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "17"
     }
 
     signingConfigs {

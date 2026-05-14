@@ -1,11 +1,36 @@
+// ============================================================================
+// ملف: about.dart
+// الغرض: شاشة "حول التطبيق" — شعار الشركة، اسم التطبيق، رقم الإصدار، المطوّر.
+// تستخدم package_info_plus لقراءة رقم الإصدار من pubspec.yaml تلقائياً.
+// ============================================================================
+
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import 'theme.dart';
 import 'widgets.dart';
 
 /// About screen — branding, app version, credits.
-class AboutScreen extends StatelessWidget {
+///
+/// شاشة معلومات التطبيق: الشعار، الإصدار، فريق التطوير.
+class AboutScreen extends StatefulWidget {
   const AboutScreen({super.key});
+
+  @override
+  State<AboutScreen> createState() => _AboutScreenState();
+}
+
+class _AboutScreenState extends State<AboutScreen> {
+  String _version = '';
+
+  @override
+  void initState() {
+    super.initState();
+    PackageInfo.fromPlatform().then((info) {
+      if (!mounted) return;
+      setState(() => _version = info.version);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +45,7 @@ class AboutScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(22),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.surface, // themed — flips with dark mode
                 borderRadius: BorderRadius.circular(AppRadius.lg),
                 border: Border.all(color: AppColors.border),
               ),
@@ -37,7 +62,7 @@ class AboutScreen extends StatelessWidget {
                   const SizedBox(height: 16),
                   Text(
                     bi(context, ar: "شبرا", en: "Shubra HR"),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w900,
                       color: AppColors.onSurface,
@@ -54,7 +79,8 @@ class AboutScreen extends StatelessWidget {
                     ),
                     child: Text(
                       bi(context,
-                          ar: "الإصدار 1.0.0", en: "Version 1.0.0"),
+                          ar: "الإصدار $_version",
+                          en: "Version $_version"),
                       style: const TextStyle(
                         color: AppColors.primary,
                         fontWeight: FontWeight.w700,
@@ -70,7 +96,7 @@ class AboutScreen extends StatelessWidget {
                         en:
                             "An all-in-one HR companion for Shubra employees and managers — manage leaves, track attendance, handle loans, and stay connected with your team."),
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: AppColors.muted,
                       fontSize: 13.5,
                       height: 1.6,
@@ -93,7 +119,7 @@ class AboutScreen extends StatelessWidget {
                     onTap: () =>
                         Navigator.pushNamed(context, "/website"),
                   ),
-                  const Divider(height: 1, color: AppColors.border),
+                  Divider(height: 1, color: AppColors.border),
                   _AboutTile(
                     icon: Icons.shield_outlined,
                     iconColor: AppColors.success,
@@ -105,7 +131,7 @@ class AboutScreen extends StatelessWidget {
                     onTap: () =>
                         Navigator.pushNamed(context, "/privacy"),
                   ),
-                  const Divider(height: 1, color: AppColors.border),
+                  Divider(height: 1, color: AppColors.border),
                   _AboutTile(
                     icon: Icons.description_outlined,
                     iconColor: AppColors.accent,
@@ -124,11 +150,26 @@ class AboutScreen extends StatelessWidget {
             const SizedBox(height: 20),
             Text(
               bi(context,
-                  ar: "© 2025 شبرا. جميع الحقوق محفوظة.",
-                  en: "© 2025 Shubra. All rights reserved."),
-              style: const TextStyle(
+                  ar:
+                      "© 2026 جميع الحقوق محفوظة - شركة شبرا الطائف التجارية",
+                  en:
+                      "© 2026 All rights reserved - Shubra Al-Taif Trading Co."),
+              textAlign: TextAlign.center,
+              style: TextStyle(
                 color: AppColors.muted,
                 fontSize: 12,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              bi(context,
+                  ar: "إدارة التحول الرقمي",
+                  en: "Digital Transformation Department"),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: AppColors.muted,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ],
@@ -181,7 +222,7 @@ class _AboutTile extends StatelessWidget {
                             fontWeight: FontWeight.w700, fontSize: 14.5)),
                     const SizedBox(height: 2),
                     Text(subtitle,
-                        style: const TextStyle(
+                        style: TextStyle(
                             color: AppColors.muted, fontSize: 12.5)),
                   ],
                 ),

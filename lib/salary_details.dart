@@ -1,3 +1,13 @@
+// ============================================================================
+// ملف: salary_details.dart
+// الغرض: عرض تفاصيل الراتب الشهري:
+//   - الراتب الأساسي.
+//   - البدلات (سكن، نقل، إضافي، ...).
+//   - الاستقطاعات (تأمين، خصومات، ...).
+//   - صافي المرتب.
+// يدعم تبديل الشهر/السنة لعرض تاريخ المرتبات.
+// ============================================================================
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -11,6 +21,8 @@ import 'theme.dart';
 import 'widgets.dart';
 
 /// Employee salary details — basic, allowances, deductions, and net.
+///
+/// شاشة تفاصيل الراتب: الأساسي + البدلات + الاستقطاعات + الصافي.
 class SalaryDetails extends StatefulWidget {
   const SalaryDetails({super.key});
 
@@ -238,7 +250,7 @@ class _SalaryDetailsState extends State<SalaryDetails> {
           Expanded(
             child: Text(
               t.basicsal,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
                 color: AppColors.onSurface,
@@ -247,7 +259,7 @@ class _SalaryDetailsState extends State<SalaryDetails> {
           ),
           Text(
             _fmt(_basic),
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w800,
               color: AppColors.onSurface,
@@ -285,7 +297,7 @@ class _SalaryDetailsState extends State<SalaryDetails> {
               padding: const EdgeInsets.symmetric(vertical: 10),
               child: Text(
                 '—',
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppColors.muted,
                   fontSize: 13,
                 ),
@@ -294,7 +306,7 @@ class _SalaryDetailsState extends State<SalaryDetails> {
           else
             for (int i = 0; i < rows.length; i++) ...[
               if (i > 0)
-                const Divider(height: 1, color: AppColors.border),
+                Divider(height: 1, color: AppColors.border),
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 child: Row(
@@ -302,7 +314,7 @@ class _SalaryDetailsState extends State<SalaryDetails> {
                     Expanded(
                       child: Text(
                         rows[i].name,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13.5,
                           color: AppColors.onSurface,
                           fontWeight: FontWeight.w600,
@@ -322,7 +334,7 @@ class _SalaryDetailsState extends State<SalaryDetails> {
               ),
             ],
           if (rows.isNotEmpty) ...[
-            const Divider(height: 1, color: AppColors.border),
+            Divider(height: 1, color: AppColors.border),
             Padding(
               padding: const EdgeInsets.only(top: 10),
               child: Row(
@@ -330,7 +342,7 @@ class _SalaryDetailsState extends State<SalaryDetails> {
                   Expanded(
                     child: Text(
                       totalLabel,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 13,
                         color: AppColors.muted,
                         fontWeight: FontWeight.w700,
@@ -367,7 +379,7 @@ class _SalaryDetailsState extends State<SalaryDetails> {
           Expanded(
             child: Text(
               t.total,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w800,
                 color: AppColors.onSurface,

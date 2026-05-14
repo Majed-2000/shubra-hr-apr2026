@@ -1,3 +1,13 @@
+// ============================================================================
+// ملف: sessions.dart
+// الغرض: عرض الجلسات النشطة (الأجهزة المسجلة دخولها بحساب المستخدم).
+// الفائدة: لو فقد المستخدم جهازاً أو اشتبه بدخول غير مصرّح → يمكنه تسجيل
+//         خروج الأجهزة الأخرى عن بُعد.
+// API:
+//   GET  /sessions               → قائمة الجلسات.
+//   POST /sessions/revoke-others → إنهاء كل الجلسات عدا الحالية.
+// ============================================================================
+
 import 'package:flutter/material.dart';
 
 import 'dio_client.dart';
@@ -35,6 +45,8 @@ class _SessionsScreenState extends State<SessionsScreen> {
     _fetch();
   }
 
+  /// جلب قائمة الجلسات من الخادم.
+  /// عند الفشل: نخزّن رسالة الخطأ في _error لعرضها كـ EmptyState.
   Future<void> _fetch() async {
     setState(() {
       _loading = true;
@@ -61,6 +73,8 @@ class _SessionsScreenState extends State<SessionsScreen> {
     }
   }
 
+  /// تسجيل خروج كل الأجهزة الأخرى (ما عدا الحالي).
+  /// نطلب تأكيداً أولاً عبر AlertDialog قبل تنفيذ العملية.
   Future<void> _revokeOthers() async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -181,10 +195,13 @@ class _SessionsScreenState extends State<SessionsScreen> {
   }
 }
 
+/// بطاقة عرض جلسة واحدة: أيقونة الجهاز + اسم + IP + آخر نشاط.
+/// إذا كانت الجلسة الحالية تُظهر شارة "الحالي".
 class _SessionCard extends StatelessWidget {
   final _Session session;
   const _SessionCard({required this.session});
 
+  /// أيقونة مناسبة حسب نوع الجهاز (iOS / Android / Web / غير معروف).
   IconData get _icon {
     final p = session.platform.toLowerCase();
     if (p.contains('ios')) return Icons.phone_iphone_rounded;
@@ -226,7 +243,7 @@ class _SessionCard extends StatelessWidget {
                             : session.deviceName,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 14.5,
                           fontWeight: FontWeight.w700,
                           color: AppColors.onSurface,
@@ -261,7 +278,7 @@ class _SessionCard extends StatelessWidget {
                   _subtitle(context),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.muted,
                     fontSize: 12,
                   ),
@@ -269,7 +286,7 @@ class _SessionCard extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   _relativeTime(context, session.lastActive),
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.muted,
                     fontSize: 11.5,
                   ),
@@ -282,6 +299,7 @@ class _SessionCard extends StatelessWidget {
     );
   }
 
+  /// بناء سطر العنوان الفرعي: "المدينة · IP" أو platform إن لم يوجد شيء آخر.
   String _subtitle(BuildContext context) {
     final parts = <String>[
       if (session.city.isNotEmpty) session.city,
@@ -291,6 +309,7 @@ class _SessionCard extends StatelessWidget {
     return parts.join(' · ');
   }
 
+  /// تحويل وقت إلى نص نسبي مفهوم: "نشط الآن"، "قبل 5 دقائق"، "قبل يوم".
   String _relativeTime(BuildContext context, DateTime? t) {
     if (t == null) {
       return bi(context, ar: "وقت غير معروف", en: "Unknown time");
@@ -320,6 +339,7 @@ class _SessionCard extends StatelessWidget {
   }
 }
 
+/// DTO للجلسة الواحدة — يُبنى من JSON الخادم.
 class _Session {
   final String id;
   final String deviceName;

@@ -1,3 +1,9 @@
+// ============================================================================
+// ملف: website.dart
+// الغرض: عرض رابط موقع الشركة + زر نسخ + زر فتح المتصفح.
+// ⚠️ ملاحظة: لا يستخدم url_launcher، فقط نسخ النص للحافظة (Clipboard).
+// ============================================================================
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -6,6 +12,8 @@ import 'theme.dart';
 import 'widgets.dart';
 
 /// Website info — in-app card showing the company portal URL.
+///
+/// شاشة عرض رابط موقع الشركة مع زر نسخ.
 class WebsiteScreen extends StatelessWidget {
   const WebsiteScreen({super.key});
 
@@ -36,7 +44,7 @@ class WebsiteScreen extends StatelessWidget {
                 const SizedBox(height: 16),
                 Text(
                   bi(context, ar: "شبرا", en: "Shubra"),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w800,
                     color: AppColors.onSurface,
@@ -50,7 +58,7 @@ class WebsiteScreen extends StatelessWidget {
                       en:
                           "The official company portal where our integrated HR services are managed."),
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.muted,
                     fontSize: 13,
                     height: 1.6,
@@ -79,7 +87,7 @@ class WebsiteScreen extends StatelessWidget {
               children: [
                 Text(
                   bi(context, ar: "للتواصل", en: "Contact"),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14.5,
                     fontWeight: FontWeight.w800,
                     color: AppColors.onSurface,
@@ -92,7 +100,7 @@ class WebsiteScreen extends StatelessWidget {
                           "لأي استفسار يخص الموارد البشرية، تواصل مع قسم الموارد البشرية داخل المنشأة.",
                       en:
                           "For any HR-related inquiry, please contact the HR department on-site."),
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.muted,
                     fontSize: 13,
                     height: 1.6,
@@ -138,7 +146,7 @@ class _UrlPill extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 10),
-              const Icon(Icons.copy_rounded,
+              Icon(Icons.copy_rounded,
                   size: 14, color: AppColors.muted),
             ],
           ),

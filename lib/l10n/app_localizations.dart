@@ -958,6 +958,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not open the email app'**
   String get emailFailed;
+
+  /// No description provided for @manualPunchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual Punch'**
+  String get manualPunchTitle;
+
+  /// No description provided for @manualPunchEmpcode.
+  ///
+  /// In en, this message translates to:
+  /// **'Employee ID'**
+  String get manualPunchEmpcode;
+
+  /// No description provided for @manualPunchCheckIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Check In'**
+  String get manualPunchCheckIn;
+
+  /// No description provided for @manualPunchCheckOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Check Out'**
+  String get manualPunchCheckOut;
+
+  /// No description provided for @manualPunchSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Punch recorded successfully'**
+  String get manualPunchSuccess;
+
+  /// No description provided for @manualPunchFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to record punch'**
+  String get manualPunchFailed;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

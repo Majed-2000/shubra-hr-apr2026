@@ -1,3 +1,18 @@
+// ============================================================================
+// ملف: login.dart
+// الغرض: شاشة تسجيل الدخول بنظام OTP (رمز تحقق لمرّة واحدة).
+// التدفق:
+//   1) المستخدم يُدخل رقم الموظف (empcode).
+//   2) نُرسل POST /login → يُرسل الـ backend رمز OTP عبر SMS أو إيميل.
+//   3) يظهر dialog لإدخال OTP (6 أرقام) + مؤقت 120 ثانية.
+//   4) عند الإدخال نُرسل POST /verify-user → نستلم access_token + refresh_token.
+//   5) نخزّن الـ tokens في secure storage ونحوّل إلى /home.
+// ميزات إضافية:
+//   - زر إعادة إرسال OTP يُفعّل بعد 120 ثانية.
+//   - دعم scope مدير (mgr_access_token) إن كان المستخدم مديراً أيضاً.
+//   - تبديل اللغة من الزر في الزاوية.
+// ============================================================================
+
 import 'dart:async';
 import 'package:dio/dio.dart' show DioException, Options;
 import 'package:flutter/material.dart';
@@ -13,30 +28,38 @@ import 'theme.dart';
 import 'widgets.dart';
 
 /// Employee OTP-based login screen with 120-second resend timer.
+///
+/// شاشة دخول الموظف عبر OTP — مع مؤقّت 120 ثانية لإعادة الإرسال.
 class Login extends StatefulWidget {
   @override
   _LoginState createState() => _LoginState();
 }
 
 class _LoginState extends State<Login> {
+  // مفتاح للنموذج لكي نستطيع استدعاء validate() قبل الإرسال.
   final _formKey = GlobalKey<FormState>();
+  // متحكّمات الحقول.
   final TextEditingController _employeeIdController = TextEditingController();
   final TextEditingController _otpController = TextEditingController();
+  // وصول لـ secure storage و Dio.
   final _storage = const FlutterSecureStorage();
   final dioClient = DioClient().client;
 
-  bool isfilled = false;
-  bool _canResend = false;
-  bool _loading = false;
-  int _secondsRemaining = 120;
-  Timer? _timer;
+  bool isfilled = false;        // هل OTP اكتمل 6 أرقام؟ (للتفعيل/التعطيل).
+  bool _canResend = false;       // هل يمكن إعادة إرسال OTP الآن؟
+  bool _loading = false;         // هل طلب /login جارٍ؟
+  int _secondsRemaining = 120;   // عداد الـ resend (يبدأ من 120).
+  Timer? _timer;                 // المؤقّت الذي يُنقص الـ counter.
 
   @override
   void initState() {
     super.initState();
+    // عند فتح الشاشة، نفحص إذا كان المستخدم مسجلاً مسبقاً.
     gettoken();
   }
 
+  /// إذا كان token موجود في storage → نتجاوز شاشة الدخول مباشرة.
+  /// (هذا حماية إضافية فوق SplashScreen — نادر أن تُستدعى).
   Future<void> gettoken() async {
     var token = await _storage.read(key: "access_token");
     if (token != null) {
@@ -44,36 +67,49 @@ class _LoginState extends State<Login> {
     }
   }
 
+  /// الخطوة 1: طلب إرسال OTP.
+  /// نُرسل empcode إلى /login، الـ backend يُرسل رمزاً عبر SMS/إيميل.
+  /// عند النجاح → نفتح dialog إدخال OTP ونشغّل المؤقت.
   Future<void> requestOtp() async {
     setState(() => _loading = true);
     try {
+      // POST /login مع empcode في الـ body.
       final response = await dioClient.post(
         '/login',
         data: {'empcode': _employeeIdController.text},
         // Don't throw on 4xx — we want the body's `message` instead of a
         // generic DioException, so the user sees the real reason.
+        //
+        // مهم: لا نرمي exception على 4xx، نُريد قراءة body لرسالة الخطأ المحددة.
         options: Options(validateStatus: (s) => s != null && s < 500),
       );
       final data = response.data;
       final code = response.statusCode ?? 0;
+      // نجاح إذا 200 + status == "success".
       if (code == 200 && data is Map && data['status'] == 'success') {
-        _showOtpModal();
-        startResendTimer();
+        _showOtpModal();          // افتح dialog إدخال OTP.
+        startResendTimer();        // ابدأ عدّ 120 ثانية.
       } else {
+        // فشل (مثلاً 404 رقم موظف غير موجود) — نعرض رسالة ودودة.
         logD('login /login failed: $code body=$data');
         _snack(_authErrorFor(code, data, isOtpStep: false));
       }
     } on DioException catch (e) {
+      // خطأ شبكي (no internet, timeout, ...) — نحوّله لرسالة عربية مفهومة.
       logD('login /login dio exception: ${e.message} body=${e.response?.data}');
       _snack(parseDioError(e, isArabic: isArabic(context)));
     } catch (e) {
+      // أي exception غير متوقع.
       logD('login /login unexpected: $e');
       _snack(AppLocalizations.of(context)!.wronginfo);
     } finally {
+      // أوقف مؤشر التحميل بغض النظر عن النتيجة.
       if (mounted) setState(() => _loading = false);
     }
   }
 
+  /// الخطوة 2: تحقق من OTP وسجّل دخول.
+  /// نُرسل empcode + otp إلى /verify-user، نستلم الـ tokens ونخزّنها.
   Future<void> verifyOtp() async {
     try {
       final response = await dioClient.post(
@@ -87,24 +123,33 @@ class _LoginState extends State<Login> {
       final data = response.data;
       final code = response.statusCode ?? 0;
       if (code == 200 && data is Map && data['status'] == 'success') {
+        // ━━━ تخزين بيانات الجلسة في secure storage (مشفّرة) ━━━
         await _storage.write(key: 'access_token', value: data['access_token']);
         await _storage.write(key: 'refresh_token', value: data['refresh_token']);
         await _storage.write(key: 'name', value: data['user']['name']);
         // Persist empcode so settings/admin features can gate themselves
         // without an extra /myinfoview round-trip.
+        //
+        // نحفظ empcode لاستخدامه في Settings (مثلاً عرض زر admin) بدون نداء إضافي.
         await _storage.write(
             key: 'empcode', value: _employeeIdController.text);
+        // هل هذا المستخدم مدير أيضاً؟
         final isManager = data['is_manager'] == true;
         await _storage.write(key: 'is_manager', value: isManager ? 'true' : 'false');
+        // current_view = أي واجهة نعرض حالياً (user/mgr) — يحدّد أي tokens نستعمل.
         await _storage.write(key: 'current_view', value: 'user');
         // Manager-scope tokens, if backend returns them. Used by dio_client
         // when current_view == 'mgr' so /mgr/* endpoints get the right scope.
+        //
+        // إذا المستخدم مدير، الـ backend يُرسل tokens إضافية لنطاق المدير.
+        // نخزّنها كي يستطيع DioClient اختيارها لاحقاً.
         if (isManager && data['mgr_access_token'] != null) {
           await _storage.write(
               key: 'mgr_access_token', value: data['mgr_access_token']);
           await _storage.write(
               key: 'mgr_refresh_token', value: data['mgr_refresh_token']);
         }
+        // كل شيء محفوظ — انتقل لـ /home واستبدل شاشة الدخول (لا يستطيع العودة لها).
         Navigator.pushReplacementNamed(context, '/home');
       } else {
         logD('login /verify-user failed: $code body=$data');
@@ -180,8 +225,11 @@ class _LoginState extends State<Login> {
     }
   }
 
+  /// اختصار لإظهار snackbar في هذه الشاشة فقط.
   void _snack(String msg) => SnackbarHelpers.show(context, msg);
 
+  /// تشغيل عدّاد 120 ثانية لإعادة الإرسال.
+  /// كل ثانية ننقص _secondsRemaining، وعند الصفر نسمح بإعادة الإرسال.
   void startResendTimer() {
     setState(() {
       _canResend = false;
@@ -200,6 +248,7 @@ class _LoginState extends State<Login> {
     });
   }
 
+  /// إعادة طلب OTP — تستدعي requestOtp فقط إذا انتهى المؤقت.
   Future<void> resendOtp() async {
     if (!_canResend) return;
     await requestOtp();
@@ -207,12 +256,18 @@ class _LoginState extends State<Login> {
 
   @override
   void dispose() {
+    // تنظيف الموارد: إلغاء المؤقت وتحرير الـ controllers.
     _timer?.cancel();
     _employeeIdController.dispose();
     _otpController.dispose();
     super.dispose();
   }
 
+  /// عرض dialog إدخال OTP — يحوي:
+  ///   - أيقونة قفل + نص "أدخل الرمز".
+  ///   - حقل إدخال 6 أرقام (مع formatter لمنع الأحرف).
+  ///   - زر إعادة إرسال (معطّل أثناء العد).
+  ///   - زر تحقق (مُفعّل عند اكتمال 6 أرقام).
   void _showOtpModal() {
     _secondsRemaining = 120;
     _canResend = false;
@@ -256,7 +311,7 @@ class _LoginState extends State<Login> {
                   const SizedBox(height: 14),
                   Text(
                     AppLocalizations.of(context)!.otp,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
                       color: AppColors.onSurface,
@@ -265,7 +320,7 @@ class _LoginState extends State<Login> {
                   const SizedBox(height: 4),
                   Text(
                     bi(context, ar: "6 أرقام", en: "6 digits"),
-                    style: const TextStyle(
+                    style: TextStyle(
                         color: AppColors.muted, fontSize: 13),
                   ),
                   const SizedBox(height: 20),
@@ -385,12 +440,12 @@ class _LoginState extends State<Login> {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.language,
+                              Icon(Icons.language,
                                   size: 16, color: AppColors.onSurface),
                               const SizedBox(width: 6),
                               Text(
                                 currentLang == 'ar' ? 'English' : 'العربية',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   color: AppColors.onSurface,
                                   fontWeight: FontWeight.w600,
                                   fontSize: 13,
@@ -418,7 +473,7 @@ class _LoginState extends State<Login> {
                 // Welcome text
                 Text(
                   bi(context, ar: "مرحبًا بك", en: "Welcome back"),
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.onSurface,
                     fontSize: 22,
                     fontWeight: FontWeight.w700,
@@ -430,7 +485,7 @@ class _LoginState extends State<Login> {
                   bi(context,
                       ar: "سجّل دخولك للمتابعة",
                       en: "Sign in to continue"),
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.muted,
                     fontSize: 14,
                   ),
@@ -447,7 +502,7 @@ class _LoginState extends State<Login> {
                         Text(
                           bi(context,
                               ar: "رقم الموظف", en: "Employee ID"),
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: AppColors.muted,
                             fontSize: 13,
                             fontWeight: FontWeight.w600,

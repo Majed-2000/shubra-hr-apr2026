@@ -1,3 +1,15 @@
+// ============================================================================
+// ملف: digital_card.dart
+// الغرض: بطاقة الموظف الرقمية (Digital ID) مع QR code.
+// المحتوى:
+//   - بطاقة بحجم كرت ائتمان مع تدرج لوني.
+//   - اسم الموظف + الوظيفة + الإدارة + كود.
+//   - QR code يحوي بيانات الموظف.
+//   - أزرار: مشاركة (Share)، حفظ صورة، تحديث.
+// ⚠️ تنبيه iOS: share_plus يحتاج sharePositionOrigin
+//   (RenderBox للزر) وإلا يفشل على iPad — مذكور في memory.
+// ============================================================================
+
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
@@ -23,6 +35,9 @@ import 'widgets.dart';
 /// Digital employee badge — a credit-card-sized ID with the employee's
 /// name, job title, employee code and a QR code. Self-fetches the data
 /// via /myinfoview so the screen is openable from anywhere.
+///
+/// بطاقة موظف رقمية بحجم كرت ائتمان مع QR. تجلب البيانات من /myinfoview
+/// بنفسها لكي تكون قابلة للفتح من أي مكان.
 class DigitalCard extends StatefulWidget {
   const DigitalCard({super.key});
 
@@ -38,6 +53,7 @@ class _DigitalCardState extends State<DigitalCard>
   final dioClient = DioClient().client;
   final _storage = const FlutterSecureStorage();
   final GlobalKey _cardKey = GlobalKey();
+  final GlobalKey _shareBtnKey = GlobalKey();
 
   late final AnimationController _fadeCtrl;
   late final Animation<double> _fade;
@@ -70,6 +86,8 @@ class _DigitalCardState extends State<DigitalCard>
     super.dispose();
   }
 
+  /// جلب بيانات الموظف لرسم البطاقة (الاسم، الوظيفة، الإدارة، الكود).
+  /// يستدعى عند initState وعند الضغط على زر التحديث.
   Future<void> _fetch() async {
     setState(() => _isLoading = true);
     try {
@@ -157,10 +175,16 @@ class _DigitalCardState extends State<DigitalCard>
     }
   }
 
+  /// مشاركة البطاقة كصورة PNG عبر share sheet.
+  /// خطوات:
+  ///   1) التقاط صورة من الـ widget باستخدام RepaintBoundary.toImage.
+  ///   2) كتابة الصورة في ملف مؤقت.
+  ///   3) استدعاء Share.shareXFiles مع anchor للزر (مهم لـ iPad).
   Future<void> _shareCard() async {
     if (_sharing) return;
     setState(() => _sharing = true);
     try {
+      // 1) التقاط صورة عالية الدقة من البطاقة (3x pixel ratio).
       final boundary = _cardKey.currentContext?.findRenderObject()
           as RenderRepaintBoundary?;
       if (boundary == null) return;
@@ -171,14 +195,32 @@ class _DigitalCardState extends State<DigitalCard>
       if (byteData == null) return;
       final Uint8List bytes = byteData.buffer.asUint8List();
 
+      // 2) كتابة في ملف مؤقت لـ share_plus.
       final dir = await getTemporaryDirectory();
       final file = File('${dir.path}/employee_card_$_empCode.png');
       await file.writeAsBytes(bytes);
 
       final t = AppLocalizations.of(context)!;
+
+      // iPad requires an anchor rect for the share popover; without it
+      // share_plus throws. Anchor on the share button when available.
+      //
+      // ⚠️ مهم جداً: iPad يحتاج anchor rect للـ popover.
+      // بدونها share_plus يرمي exception على iPad ويفشل بدون رسالة واضحة.
+      // نحسب الـ rect من زر المشاركة عبر GlobalKey + findRenderObject.
+      Rect? origin;
+      final btnBox =
+          _shareBtnKey.currentContext?.findRenderObject() as RenderBox?;
+      if (btnBox != null && btnBox.hasSize) {
+        final topLeft = btnBox.localToGlobal(Offset.zero);
+        origin = topLeft & btnBox.size;
+      }
+
+      // 3) فتح share sheet مع الصورة.
       await Share.shareXFiles(
         [XFile(file.path, mimeType: 'image/png')],
         subject: t.digitalCard,
+        sharePositionOrigin: origin,
       );
     } catch (e) {
       logD('Share card failed: $e');
@@ -289,6 +331,7 @@ class _DigitalCardState extends State<DigitalCard>
                       SizedBox(
                         width: double.infinity,
                         child: PrimaryButton(
+                          key: _shareBtnKey,
                           label: t.shareCard,
                           icon: Icons.ios_share_rounded,
                           loading: _sharing,

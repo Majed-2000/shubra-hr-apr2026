@@ -1,3 +1,13 @@
+// ============================================================================
+// ملف: home_mgr.dart
+// الغرض: لوحة المدير الرئيسية — مرآة لـ home.dart لكن للمدير.
+// المحتوى:
+//   - Header مع زر بدّل للوحة الموظف.
+//   - بطاقات إحصائية (طلبات إجازات للموافقة، عُهد، تقييمات).
+//   - Quick actions: الموافقة على الإجازات، العُهد، التقييمات، الإشعارات.
+// كل الـ endpoints تبدأ بـ /mgr/* وتستعمل mgr_access_token تلقائياً عبر DioClient.
+// ============================================================================
+
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -12,14 +22,15 @@ import 'widgets.dart';
 /// Manager dashboard. Mirrors [Home] but with manager-specific quick
 /// actions (approve leaves, review custody, rate employees, broadcast
 /// notifications).
+///
+/// لوحة المدير. تشبه Home لكن باختصارات خاصة بالمدير
+/// (موافقة الإجازات، مراجعة العُهد، تقييم الموظفين، البث الإشعاري).
 class HomeMgr extends StatefulWidget {
   @override
   _HomeMgrState createState() => _HomeMgrState();
 }
 
 class _HomeMgrState extends State<HomeMgr> {
-  final TextEditingController _employeeIdController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
   final dioClient = DioClient().client;
 
   final _storage = const FlutterSecureStorage();
@@ -29,6 +40,8 @@ class _HomeMgrState extends State<HomeMgr> {
 
   late FirebaseMessaging messaging;
 
+  /// تهيئة FCM للمدير — نفس منطق home.dart لكن يُحمَّل token لنطاق المدير
+  /// عبر /mgr/uploadtoken (ليصل المدير لإشعارات /mgr/*).
   Future<void> _initFCM() async {
     NotificationSettings settings =
         await FirebaseMessaging.instance.requestPermission(
@@ -69,6 +82,7 @@ class _HomeMgrState extends State<HomeMgr> {
     }
   }
 
+  /// جلب بيانات المدير من /mgr/myinfoview (مرآة لـ /myinfoview ولكن بنطاق مدير).
   Future<void> getInfo() async {
     try {
       final response = await dioClient.get('/mgr/myinfoview');
@@ -137,7 +151,7 @@ class _HomeMgrState extends State<HomeMgr> {
     final padding = MediaQuery.of(context).padding.top;
     return Container(
       padding: EdgeInsets.fromLTRB(20, padding + 12, 20, 20),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.surface,
         border: Border(
           bottom: BorderSide(color: AppColors.border, width: 1),
@@ -145,20 +159,27 @@ class _HomeMgrState extends State<HomeMgr> {
       ),
       child: Column(
         children: [
+          // تبديل اللغة انتقل إلى شاشة Settings — هنا dark/light toggle.
           Row(
             children: [
-              _chipButton(
-                label: currentLang == 'ar' ? 'EN' : 'ع',
-                onTap: () {
-                  var newLocale = currentLang == 'ar' ? 'en' : 'ar';
-                  _storage.write(key: "locale", value: newLocale);
-                  localeNotifier.value = Locale(newLocale);
+              _iconBtn(
+                themeNotifier.value == ThemeMode.dark
+                    ? Icons.light_mode_rounded
+                    : Icons.dark_mode_outlined,
+                onTap: () async {
+                  final newMode = themeNotifier.value == ThemeMode.dark
+                      ? ThemeMode.light
+                      : ThemeMode.dark;
+                  await _storage.write(
+                      key: "theme_mode",
+                      value: newMode == ThemeMode.dark ? "dark" : "light");
+                  themeNotifier.value = newMode;
                 },
               ),
               const Spacer(),
               Text(
                 t.shubra,
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppColors.onSurface,
                   fontWeight: FontWeight.w800,
                   fontSize: 16,
@@ -211,7 +232,7 @@ class _HomeMgrState extends State<HomeMgr> {
                       children: [
                         Text(
                           t.welcome,
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: AppColors.muted,
                             fontSize: 13,
                           ),
@@ -241,7 +262,7 @@ class _HomeMgrState extends State<HomeMgr> {
                       username,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.onSurface,
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
@@ -257,28 +278,6 @@ class _HomeMgrState extends State<HomeMgr> {
             ],
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _chipButton({required String label, required VoidCallback onTap}) {
-    return Material(
-      color: AppColors.surfaceAlt,
-      borderRadius: BorderRadius.circular(AppRadius.xs),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(AppRadius.xs),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          child: Text(
-            label,
-            style: const TextStyle(
-              color: AppColors.onSurface,
-              fontWeight: FontWeight.w700,
-              fontSize: 13,
-            ),
-          ),
-        ),
       ),
     );
   }
@@ -357,7 +356,7 @@ class _HomeMgrState extends State<HomeMgr> {
                       textAlign: TextAlign.center,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                         color: AppColors.onSurface,
@@ -426,7 +425,7 @@ class _HomeMgrState extends State<HomeMgr> {
             const SizedBox(height: 14),
             Text(t.internet,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                     color: AppColors.muted,
                     fontSize: 14,
                     fontWeight: FontWeight.w600)),
@@ -439,7 +438,7 @@ class _HomeMgrState extends State<HomeMgr> {
   // ─── Bottom navigation ──────────────────────────────────────
   Widget _buildBottomNav(BuildContext context, AppLocalizations t) {
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.surface,
         border: Border(
           top: BorderSide(color: AppColors.border, width: 1),

@@ -1,17 +1,48 @@
+// ============================================================================
+// ملف: widgets.dart
+// الغرض: مكتبة widgets مشتركة تُستخدم في جميع شاشات التطبيق.
+// المحتوى الرئيسي:
+//   - bi() / isArabic(): مساعدات اللغة العربية/الإنجليزية.
+//   - ModernScaffold: هيكل الشاشة الموحد (header + back + actions + body).
+//   - StatusBadge: شارة حالة ملوّنة (مقبول/مرفوض/معلّق).
+//   - EmptyState: واجهة "لا توجد بيانات" مع أيقونة وعنوان.
+//   - DetailRow, LabeledField, ListSectionTitle: عناصر نموذج/عرض موحّدة.
+//   - Loader / Skeleton / SkeletonList: مؤشرات تحميل.
+// لماذا مهم: يُلزم كل الشاشات بنفس المظهر — لا تكرار، لا تباين بصري.
+// ============================================================================
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'theme.dart';
 
 /// Bilingual string helper — picks Arabic or English based on current locale.
+///
+/// مساعد ثنائي اللغة: يختار النص العربي أو الإنجليزي حسب لغة الواجهة الحالية.
+/// مثال: Text(bi(context, ar: "مرحباً", en: "Welcome"))
 String bi(BuildContext context, {required String ar, required String en}) {
   final code = Localizations.localeOf(context).languageCode;
   return code == 'ar' ? ar : en;
 }
 
+/// يُرجع true إذا الواجهة الحالية عربية — مفيد لاختبار شروط (مثل اتجاه RTL).
 bool isArabic(BuildContext context) =>
     Localizations.localeOf(context).languageCode == 'ar';
 
 /// Clean white scaffold — Jisr style
+///
+/// الهيكل الموحد لمعظم الشاشات. يحوي:
+///   - رأس أبيض ثابت (header) مع زر رجوع + actions على اليمين.
+///   - عنوان + عنوان فرعي + أيقونة جانبية اختيارية.
+///   - body قابل للتمرير في المساحة المتبقية.
+///   - floating action button اختياري.
+/// المعاملات:
+/// - [title]:                النص الرئيسي في الـ header.
+/// - [subtitle]:             عنوان فرعي اختياري.
+/// - [leadingIcon]:          أيقونة بجانب العنوان (مربع ملوّن).
+/// - [body]:                 محتوى الشاشة الرئيسي.
+/// - [actions]:              widgets على يسار الـ header (مثل زر تحديث).
+/// - [floatingActionButton]: زر عائم (FAB).
+/// - [showBack]:             إظهار زر الرجوع (افتراضياً true).
 class ModernScaffold extends StatelessWidget {
   final String title;
   final String? subtitle;
@@ -50,7 +81,7 @@ class ModernScaffold extends StatelessWidget {
             Container(
               width: double.infinity,
               padding: EdgeInsets.fromLTRB(16, top + 8, 16, 16),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: AppColors.surface,
                 border: Border(
                   bottom: BorderSide(color: AppColors.border, width: 1),
@@ -92,7 +123,7 @@ class ModernScaffold extends StatelessWidget {
                           children: [
                             Text(
                               title,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: AppColors.onSurface,
                                 fontWeight: FontWeight.w700,
                                 fontSize: 20,
@@ -104,7 +135,7 @@ class ModernScaffold extends StatelessWidget {
                                 padding: const EdgeInsets.only(top: 2),
                                 child: Text(
                                   subtitle!,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     color: AppColors.muted,
                                     fontSize: 13,
                                   ),
@@ -132,6 +163,8 @@ class ModernScaffold extends StatelessWidget {
   }
 }
 
+/// زر دائري صغير في الـ header (مثل زر الرجوع أو التحديث).
+/// _underscore يعني أنه خاص داخلي بهذا الملف فقط.
 class _HeaderIcon extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
@@ -154,6 +187,12 @@ class _HeaderIcon extends StatelessWidget {
 }
 
 /// Rounded colored pill — for statuses like accepted/refused/pending
+///
+/// شارة ملوّنة لعرض حالة (مقبول/مرفوض/معلّق) في قوائم الطلبات.
+/// تأتي بـ 3 factory constructors جاهزة:
+///   - StatusBadge.accepted("مقبول") → أخضر.
+///   - StatusBadge.refused("مرفوض") → أحمر.
+///   - StatusBadge.pending("معلّق") → برتقالي.
 class StatusBadge extends StatelessWidget {
   final String label;
   final Color color;
@@ -213,6 +252,9 @@ class StatusBadge extends StatelessWidget {
 }
 
 /// Friendly empty-state card
+///
+/// واجهة "لا توجد بيانات" — أيقونة دائرية كبيرة + عنوان + شرح.
+/// تُستخدم في القوائم الفارغة (لا إجازات، لا قروض، لا إشعارات).
 class EmptyState extends StatelessWidget {
   final IconData icon;
   final String title;
@@ -230,8 +272,11 @@ class EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = accent ?? AppColors.primary;
+    // SingleChildScrollView يمنع الـ overflow عندما يكون الـ parent ضيقاً
+    // (مثلاً عند فتح keyboard في شاشة بحث ذات Expanded — الـ EmptyState
+    // بحجمه الطبيعي ~200-250px قد يتجاوز المساحة المتاحة فيظهر banner).
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -250,7 +295,7 @@ class EmptyState extends StatelessWidget {
             Text(
               title,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
                 color: AppColors.onSurface,
@@ -261,7 +306,7 @@ class EmptyState extends StatelessWidget {
               Text(
                 subtitle!,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13,
                   color: AppColors.muted,
                 ),
@@ -275,6 +320,9 @@ class EmptyState extends StatelessWidget {
 }
 
 /// Icon + label + value row
+///
+/// صف لعرض تفصيلة (أيقونة مربعة + label + value).
+/// مثل InfoTile لكن أصغر — مناسب لعرض حقول في بطاقة طلب.
 class DetailRow extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -309,7 +357,7 @@ class DetailRow extends StatelessWidget {
           const SizedBox(width: 10),
           Text(
             "$label: ",
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13.5,
               color: AppColors.muted,
               fontWeight: FontWeight.w500,
@@ -318,7 +366,7 @@ class DetailRow extends StatelessWidget {
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 color: AppColors.onSurface,
                 fontWeight: FontWeight.w600,
@@ -332,6 +380,18 @@ class DetailRow extends StatelessWidget {
 }
 
 /// Modern labeled form field
+///
+/// حقل نموذج موحّد: label أعلى + TextFormField + أيقونة prefix.
+/// يدعم validator ومدخلات متعددة الأسطر.
+/// المعاملات:
+/// - [label]:        تسمية فوق الحقل.
+/// - [controller]:   متحكم النص (إلزامي).
+/// - [icon]:         أيقونة قبل النص.
+/// - [hint]:         نص توجيهي بداخل الحقل.
+/// - [maxLines]:     عدد الأسطر (1 افتراضياً).
+/// - [keyboardType]: نوع لوحة المفاتيح (text/number/email/...).
+/// - [validator]:    دالة تحقق ترجع نص خطأ أو null.
+/// - [enabled]:      هل الحقل قابل للتعديل (افتراضياً true).
 class LabeledField extends StatelessWidget {
   final String label;
   final TextEditingController controller;
@@ -361,7 +421,7 @@ class LabeledField extends StatelessWidget {
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w600,
             color: AppColors.muted,
@@ -387,6 +447,9 @@ class LabeledField extends StatelessWidget {
 }
 
 /// Simple section/list header
+///
+/// عنوان قسم بسيط في قائمة (مثلاً "آخر الإجازات" / "5 طلبات").
+/// trailing اختياري للعدّ أو رابط "عرض الكل".
 class ListSectionTitle extends StatelessWidget {
   final String title;
   final String? trailing;
@@ -400,7 +463,7 @@ class ListSectionTitle extends StatelessWidget {
           Expanded(
             child: Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
                 color: AppColors.onSurface,
@@ -411,7 +474,7 @@ class ListSectionTitle extends StatelessWidget {
           if (trailing != null)
             Text(
               trailing!,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
                 color: AppColors.muted,
                 fontWeight: FontWeight.w600,
@@ -424,6 +487,8 @@ class ListSectionTitle extends StatelessWidget {
 }
 
 /// Loading indicator styled with brand color
+///
+/// مؤشر تحميل بسيط في وسط الشاشة بلون التطبيق الأساسي.
 class Loader extends StatelessWidget {
   const Loader({super.key});
   @override
@@ -450,6 +515,9 @@ class Loader extends StatelessWidget {
 /// just a [ColorTween] driven by an [AnimationController] so the cost
 /// is one rebuild per frame regardless of how many [Skeleton]s are on
 /// screen.
+///
+/// "هيكل وهمي" (skeleton) ينبض بين لونين — يعرض شكل المحتوى أثناء التحميل.
+/// خفيف الأداء جداً (لا shader، لا مكتبة خارجية).
 class Skeleton extends StatefulWidget {
   final double? width;
   final double height;
@@ -524,6 +592,9 @@ class _SkeletonState extends State<Skeleton>
 /// a primary line, and a shorter secondary line. Wrapped in the same
 /// glass card as real list items so the layout doesn't shift when data
 /// arrives.
+///
+/// صف عنصر وهمي في قائمة skeleton: مربع صورة + سطرين نصيّين وهميّين.
+/// يحاكي حجم البطاقة الحقيقية كي لا تقفز الواجهة عند وصول البيانات.
 class SkeletonListTile extends StatelessWidget {
   final bool hasAvatar;
   final EdgeInsetsGeometry margin;
@@ -569,6 +640,9 @@ class SkeletonListTile extends StatelessWidget {
 /// Drop-in replacement for [Loader] on list-shaped screens. Renders
 /// [count] [SkeletonListTile]s inside a scrollable list so the user
 /// gets a sense of the upcoming layout instead of a centred spinner.
+///
+/// بديل لـ Loader في الشاشات التي بها قائمة — يعرض عدة عناصر وهمية
+/// لإعطاء فكرة عن الشكل القادم بدلاً من spinner واحد في الوسط.
 class SkeletonList extends StatelessWidget {
   final int count;
   final bool hasAvatar;

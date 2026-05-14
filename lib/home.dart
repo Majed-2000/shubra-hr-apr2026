@@ -1,3 +1,16 @@
+// ============================================================================
+// ملف: home.dart
+// الغرض: لوحة الموظف الرئيسية — أول شاشة بعد تسجيل الدخول.
+// المحتوى:
+//   - Header: ترحيب باسم المستخدم + صورته + زر بدّل للوحة المدير (إن كان).
+//   - بطاقات الأرصدة: إجازات متبقية، قروض حالية، عُهد.
+//   - Quick actions: اختصارات للشاشات المهمة (طلب إجازة، طلب قرض، ...).
+//   - بطاقة معلومات: تفاصيل سريعة عن الموظف.
+// API:
+//   GET /myinfoview → معلومات الموظف الكاملة.
+//   POST /uploadtoken → تسجيل FCM token مع الـ backend.
+// ============================================================================
+
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -5,29 +18,37 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shubraepp/main.dart';
 import 'dio_client.dart';
 import 'l10n/app_localizations.dart';
+import 'manual_punch.dart';
 import 'shared/utils/logger.dart';
 import 'theme.dart';
 import 'widgets.dart';
 
 /// Employee dashboard — header, balance/stats, quick actions, info card.
+///
+/// لوحة الموظف — أول شاشة بعد الدخول. تعرض رصيد الإجازات، القروض،
+/// والاختصارات السريعة لكل الوظائف.
 class Home extends StatefulWidget {
   @override
   _HomeState createState() => _HomeState();
 }
 
 class _HomeState extends State<Home> {
-  final TextEditingController _employeeIdController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
   final dioClient = DioClient().client;
 
   final _storage = const FlutterSecureStorage();
   String username = "";
   bool isManager = false;
   bool _loadFailed = false;
+  // empcode الحالي للتحكم في ميزة إخفية (long-press على بطاقة الحضور).
+  // null حتى ينتهي القراءة من secure storage.
+  String? _empcode;
 
   late FirebaseMessaging messaging;
   Map<String, dynamic> empinfo = {};
 
+  /// تهيئة Firebase Cloud Messaging:
+  /// طلب الصلاحية، ثم الحصول على FCM token وتسجيله مع الـ backend.
+  /// (هذا تكرار للمنطق في main.dart — مقصود ليضمن تحديث الـ token عند كل دخول).
   Future<void> _initFCM() async {
     NotificationSettings settings =
         await FirebaseMessaging.instance.requestPermission(
@@ -48,28 +69,38 @@ class _HomeState extends State<Home> {
   @override
   void initState() {
     super.initState();
-    readName();
-    getInfo();
-    _initFCM();
+    // 3 عمليات بالتوازي عند فتح الشاشة:
+    readName();    // قراءة اسم المستخدم من storage (سريع، لا شبكة).
+    getInfo();     // طلب بيانات الموظف من الـ backend.
+    _initFCM();    // تهيئة الإشعارات.
   }
 
+  /// إرسال FCM token إلى الـ backend ليستطيع إرسال إشعارات مستهدفة.
+  /// نتجاهل أي error هنا (ليس حرجاً إذا فشل).
   Future<void> uploadtoken(String _token) async {
     try {
       await dioClient.post('/uploadtoken', data: {'token': _token});
     } catch (e) {}
   }
 
+  /// قراءة اسم المستخدم وعَلَم isManager من secure storage.
+  /// نملأ الـ UI بهما فوراً ثم نطلب البيانات الكاملة عبر getInfo().
   Future<void> readName() async {
     String? name = await _storage.read(key: "name");
     String? mgrFlag = await _storage.read(key: "is_manager");
+    String? empcode = await _storage.read(key: "empcode");
     if (mounted) {
       setState(() {
         if (name != null) username = name;
         isManager = mgrFlag == 'true';
+        _empcode = empcode;
       });
     }
   }
 
+  /// جلب معلومات الموظف الكاملة من /myinfoview.
+  /// يحدّث empinfo و is_manager.
+  /// عند الفشل: _loadFailed = true لعرض حالة خطأ.
   Future<void> getInfo() async {
     try {
       final response = await dioClient.get('/myinfoview');
@@ -98,6 +129,8 @@ class _HomeState extends State<Home> {
     }
   }
 
+  /// بناء الشاشة. تستخدم CustomScrollView مع slivers لكي يكون الـ header
+  /// والقوائم متجانسة في نفس الـ scroll. يدعم سحب للتحديث (RefreshIndicator).
   @override
   Widget build(BuildContext context) {
     String currentLang = Localizations.localeOf(context).languageCode;
@@ -145,12 +178,15 @@ class _HomeState extends State<Home> {
   }
 
   // ─── Clean white header ──────────────────────────────────────
+  /// بناء الـ header الأبيض:
+  ///   - سطر علوي: زر اللغة + شعار + زر "المدير" (إن كان) + جرس الإشعارات.
+  ///   - سطر ترحيب: حرف الاسم في دائرة + "مرحباً [الاسم]".
   Widget _buildHeader(
       BuildContext context, AppLocalizations t, String currentLang) {
     final padding = MediaQuery.of(context).padding.top;
     return Container(
       padding: EdgeInsets.fromLTRB(20, padding + 12, 20, 20),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.surface,
         border: Border(
           bottom: BorderSide(color: AppColors.border, width: 1),
@@ -158,21 +194,32 @@ class _HomeState extends State<Home> {
       ),
       child: Column(
         children: [
-          // Top bar: language toggle — logo — notifications
+          // Top bar: theme toggle — logo — notifications
+          // ملاحظة: تبديل اللغة انتقل إلى شاشة Settings — هنا نضع زر
+          // dark/light mode بدلاً منه لأنه أكثر استعمالاً.
           Row(
             children: [
-              _chipButton(
-                label: currentLang == 'ar' ? 'EN' : 'ع',
-                onTap: () {
-                  var newLocale = currentLang == 'ar' ? 'en' : 'ar';
-                  _storage.write(key: "locale", value: newLocale);
-                  localeNotifier.value = Locale(newLocale);
+              _iconBtn(
+                // الأيقونة تعرض الوضع الذي سننتقل إليه عند الضغط:
+                // currently light → show moon (tap to go dark).
+                // currently dark → show sun (tap to go light).
+                themeNotifier.value == ThemeMode.dark
+                    ? Icons.light_mode_rounded
+                    : Icons.dark_mode_outlined,
+                onTap: () async {
+                  final newMode = themeNotifier.value == ThemeMode.dark
+                      ? ThemeMode.light
+                      : ThemeMode.dark;
+                  await _storage.write(
+                      key: "theme_mode",
+                      value: newMode == ThemeMode.dark ? "dark" : "light");
+                  themeNotifier.value = newMode;
                 },
               ),
               const Spacer(),
               Text(
                 t.shubra,
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppColors.onSurface,
                   fontWeight: FontWeight.w800,
                   fontSize: 16,
@@ -197,7 +244,7 @@ class _HomeState extends State<Home> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.admin_panel_settings_outlined,
                             size: 16,
                             color: AppColors.onSurface,
@@ -205,7 +252,7 @@ class _HomeState extends State<Home> {
                           const SizedBox(width: 6),
                           Text(
                             bi(context, ar: "المدير", en: "Manager"),
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: AppColors.onSurface,
                               fontWeight: FontWeight.w700,
                               fontSize: 12,
@@ -253,7 +300,7 @@ class _HomeState extends State<Home> {
                   children: [
                     Text(
                       t.welcome,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.muted,
                         fontSize: 13,
                       ),
@@ -263,7 +310,7 @@ class _HomeState extends State<Home> {
                       username,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.onSurface,
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
@@ -279,28 +326,6 @@ class _HomeState extends State<Home> {
             ],
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _chipButton({required String label, required VoidCallback onTap}) {
-    return Material(
-      color: AppColors.surfaceAlt,
-      borderRadius: BorderRadius.circular(AppRadius.xs),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(AppRadius.xs),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          child: Text(
-            label,
-            style: const TextStyle(
-              color: AppColors.onSurface,
-              fontWeight: FontWeight.w700,
-              fontSize: 13,
-            ),
-          ),
-        ),
       ),
     );
   }
@@ -321,6 +346,7 @@ class _HomeState extends State<Home> {
   }
 
   // ─── Stats row ──────────────────────────────────────────────
+  /// صف بطاقات الإحصاءات الرئيسية (الإجازات، القروض، الراتب، الحضور).
   Widget _buildStatsRow(AppLocalizations t) {
     final info = empinfo['info'] ?? {};
     return Padding(
@@ -375,7 +401,7 @@ class _HomeState extends State<Home> {
               children: [
                 Text(
                   label,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.muted,
                     fontSize: 11.5,
                     fontWeight: FontWeight.w500,
@@ -384,7 +410,7 @@ class _HomeState extends State<Home> {
                 const SizedBox(height: 2),
                 Text(
                   value,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.onSurface,
                     fontSize: 17,
                     fontWeight: FontWeight.w800,
@@ -399,6 +425,7 @@ class _HomeState extends State<Home> {
   }
 
   // ─── Birthday & occasions ───────────────────────────────────
+  /// قسم أعياد الميلاد والمناسبات (تهاني للزملاء).
   Widget _buildBirthdayAndOccasions(AppLocalizations t) {
     final hasBd = empinfo['bd'] == true;
     final hasOcc =
@@ -487,6 +514,8 @@ class _HomeState extends State<Home> {
   }
 
   // ─── Quick actions ──────────────────────────────────────────
+  /// شبكة الاختصارات السريعة (طلب إجازة، طلب قرض، الحضور، ...).
+  /// كل اختصار = أيقونة + label + نداء Navigator.pushNamed.
   Widget _buildQuickActions(AppLocalizations t) {
     final actions = [
       _QuickAction(Icons.time_to_leave_outlined, t.requestleave,
@@ -532,9 +561,18 @@ class _HomeState extends State<Home> {
             ),
             itemBuilder: (_, i) {
               final a = actions[i];
+              // ميزة مخفية: ضغطة مطوّلة على بطاقة "سجل الحضور" تفتح
+              // ديالوق تسجيل بصمة يدوياً — لكنها مفعّلة فقط لـ empcode 10021.
+              // باقي المستخدمين: onLongPress = null → لا شيء يحدث (صامت تماماً).
+              final isAttendanceTile = a.route == "/attendance";
+              final canManualPunch =
+                  isAttendanceTile && _empcode == "10021";
               return GlassCard(
                 padding: const EdgeInsets.all(10),
                 onTap: () => Navigator.pushNamed(context, a.route),
+                onLongPress: canManualPunch
+                    ? () => showManualPunchDialog(context)
+                    : null,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -554,7 +592,7 @@ class _HomeState extends State<Home> {
                       textAlign: TextAlign.center,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                         color: AppColors.onSurface,
@@ -571,6 +609,7 @@ class _HomeState extends State<Home> {
   }
 
   // ─── Info card ──────────────────────────────────────────────
+  /// بطاقة معلومات الموظف التفصيلية (الإدارة، الوظيفة، التاريخ، ...).
   Widget _buildInfoCard(AppLocalizations t) {
     final info = empinfo['info'] ?? {};
     final nation = empinfo['nation'];
@@ -599,23 +638,23 @@ class _HomeState extends State<Home> {
                     icon: Icons.person_outline,
                     label: t.name,
                     value: fullName),
-                const Divider(height: 1, color: AppColors.border),
+                Divider(height: 1, color: AppColors.border),
                 InfoTile(
                     icon: Icons.badge_outlined,
                     label: t.empcode,
                     value: '${info['emcd'] ?? ''}'),
-                const Divider(height: 1, color: AppColors.border),
+                Divider(height: 1, color: AppColors.border),
                 InfoTile(
                     icon: Icons.phone_iphone_rounded,
                     label: t.mobile,
                     value: '${info['empmob'] ?? ''}'),
-                const Divider(height: 1, color: AppColors.border),
+                Divider(height: 1, color: AppColors.border),
                 InfoTile(
                     icon: Icons.flag_outlined,
                     label: t.nationality,
                     value:
                         '${(nation != null && nation.isNotEmpty) ? nation[0]['ntnma'] ?? '' : ''}'),
-                const Divider(height: 1, color: AppColors.border),
+                Divider(height: 1, color: AppColors.border),
                 InfoTile(
                     icon: Icons.supervisor_account_outlined,
                     label: t.manager,
@@ -648,7 +687,7 @@ class _HomeState extends State<Home> {
                         bi(context,
                             ar: "التفاصيل المالية",
                             en: "Financial details"),
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.w700,
                           fontSize: 14,
                           color: AppColors.onSurface,
@@ -660,7 +699,7 @@ class _HomeState extends State<Home> {
                             ar:
                                 "الراتب والحساب البنكي والآيبان — مخفية للخصوصية",
                             en: "Salary, bank & IBAN — hidden for privacy"),
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: AppColors.muted,
                           fontSize: 11.5,
                         ),
@@ -668,7 +707,7 @@ class _HomeState extends State<Home> {
                     ],
                   ),
                 ),
-                const Icon(Icons.arrow_forward_ios_rounded,
+                Icon(Icons.arrow_forward_ios_rounded,
                     size: 14, color: AppColors.muted),
               ],
             ),
@@ -679,6 +718,7 @@ class _HomeState extends State<Home> {
   }
 
   // ─── Empty state ────────────────────────────────────────────
+  /// واجهة الخطأ عند فشل تحميل البيانات — مع زر "إعادة المحاولة".
   Widget _buildEmptyState(AppLocalizations t) {
     return Center(
       child: Padding(
@@ -699,7 +739,7 @@ class _HomeState extends State<Home> {
             const SizedBox(height: 14),
             Text(t.internet,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                     color: AppColors.muted,
                     fontSize: 14,
                     fontWeight: FontWeight.w600)),
@@ -710,6 +750,7 @@ class _HomeState extends State<Home> {
   }
 
   // ─── Skeleton placeholder (first-load shimmer) ──────────────
+  /// واجهة "هيكل وهمي" أثناء التحميل الأولي (شبكية + بطاقات وهمية).
   Widget _buildSkeleton(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
@@ -767,11 +808,11 @@ class _HomeState extends State<Home> {
             child: Column(
               children: [
                 _skeletonInfoRow(),
-                const Divider(height: 1, color: AppColors.border),
+                Divider(height: 1, color: AppColors.border),
                 _skeletonInfoRow(),
-                const Divider(height: 1, color: AppColors.border),
+                Divider(height: 1, color: AppColors.border),
                 _skeletonInfoRow(),
-                const Divider(height: 1, color: AppColors.border),
+                Divider(height: 1, color: AppColors.border),
                 _skeletonInfoRow(),
               ],
             ),
@@ -824,9 +865,10 @@ class _HomeState extends State<Home> {
   }
 
   // ─── Bottom navigation ──────────────────────────────────────
+  /// شريط التنقل السفلي (Bottom Navigation): الرئيسية، البطاقة، الإعدادات، ...
   Widget _buildBottomNav(BuildContext context, AppLocalizations t) {
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.surface,
         border: Border(
           top: BorderSide(color: AppColors.border, width: 1),

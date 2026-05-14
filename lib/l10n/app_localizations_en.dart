@@ -441,4 +441,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get emailFailed => 'Could not open the email app';
+
+  @override
+  String get manualPunchTitle => 'Manual Punch';
+
+  @override
+  String get manualPunchEmpcode => 'Employee ID';
+
+  @override
+  String get manualPunchCheckIn => 'Check In';
+
+  @override
+  String get manualPunchCheckOut => 'Check Out';
+
+  @override
+  String get manualPunchSuccess => 'Punch recorded successfully';
+
+  @override
+  String get manualPunchFailed => 'Failed to record punch';
 }

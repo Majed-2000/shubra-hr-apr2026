@@ -1,3 +1,12 @@
+// ============================================================================
+// ملف: colleagues.dart
+// الغرض: عرض دليل زملاء العمل (نفس الإدارة + المدير المباشر).
+// المحتوى:
+//   - المدير المباشر في الأعلى (بطاقة بارزة).
+//   - قائمة الزملاء الذين يتبعون نفس المدير.
+//   - زر اتصال/whatsapp/إيميل لكل زميل.
+// ============================================================================
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -12,6 +21,8 @@ import 'widgets.dart';
 
 /// Manager + colleagues directory — current employee's direct manager
 /// at the top, then everyone reporting to the same manager.
+///
+/// شاشة دليل المدير المباشر + الزملاء (الموظفون التابعون لنفس المدير).
 class Colleagues extends StatefulWidget {
   const Colleagues({super.key});
 
@@ -162,7 +173,7 @@ class _ColleaguesState extends State<Colleagues> {
               const SizedBox(width: 8),
               Text(
                 t.directManager,
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppColors.muted,
                   fontSize: 12.5,
                   fontWeight: FontWeight.w800,
@@ -177,7 +188,7 @@ class _ColleaguesState extends State<Colleagues> {
               padding: const EdgeInsets.symmetric(vertical: 6),
               child: Text(
                 t.noManager,
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppColors.muted,
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -208,7 +219,7 @@ class _ColleaguesState extends State<Colleagues> {
         const SizedBox(width: 8),
         Text(
           t.colleaguesCount(_colleagues.length),
-          style: const TextStyle(
+          style: TextStyle(
             color: AppColors.muted,
             fontSize: 12.5,
             fontWeight: FontWeight.w800,
@@ -282,7 +293,7 @@ class _PersonDetailBlock extends StatelessWidget {
                         person.jobTitle,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12.5,
                           color: AppColors.muted,
                           fontWeight: FontWeight.w600,
@@ -386,7 +397,7 @@ class _InfoLine extends StatelessWidget {
             value,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12.5,
               color: AppColors.onSurface,
               fontWeight: FontWeight.w600,

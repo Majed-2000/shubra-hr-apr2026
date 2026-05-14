@@ -1,3 +1,9 @@
+// ============================================================================
+// ملف: complaint.dart
+// الغرض: نموذج بسيط لتقديم شكوى/مقترح إلى قسم الموارد البشرية.
+// المحتوى: عنوان الشكوى + النص. POST /submitComplaint.
+// ============================================================================
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
@@ -8,6 +14,8 @@ import 'theme.dart';
 import 'widgets.dart';
 
 /// Lets the employee file a complaint with a title and free-form text.
+///
+/// شاشة تقديم شكوى — عنوان + نص حر، تُرسل لـ HR.
 class Complaint extends StatefulWidget {
   @override
   _ComplaintState createState() => _ComplaintState();
@@ -27,6 +35,8 @@ class _ComplaintState extends State<Complaint> {
     super.dispose();
   }
 
+  /// إرسال الشكوى عبر POST /submitComplaint.
+  /// نستعمل FormData (وليس JSON) لأن الـ backend يتعامل مع multipart.
   Future<void> submitComplaint() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _sending = true);

@@ -1,3 +1,12 @@
+// ============================================================================
+// ملف: custody_mgr.dart
+// الغرض: شاشة المدير للتحقق من عُهد أي موظف عبر إدخال رقم الموظف.
+// التدفق:
+//   1) المدير يُدخل empcode في حقل البحث.
+//   2) Submit → جلب العُهد من /mgr/getEmpCustody?empcode=X&page=N.
+//   3) عرض النتائج مع pagination.
+// ============================================================================
+
 import 'package:flutter/material.dart';
 import 'dio_client.dart';
 import 'cust.dart';
@@ -6,6 +15,8 @@ import 'theme.dart';
 import 'widgets.dart';
 
 /// Manager view for inspecting an employee's custody items by employee code.
+///
+/// شاشة المدير لمراجعة عُهد موظف معيّن بإدخال رقمه.
 class CustodyMgr extends StatefulWidget {
   @override
   _CustodyMgrState createState() => _CustodyMgrState();
@@ -188,7 +199,7 @@ class _CustodyMgrState extends State<CustodyMgr> {
                                       children: [
                                         Text(
                                           item.name ?? '-',
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             fontWeight: FontWeight.w800,
                                             fontSize: 15,
                                             color: AppColors.onSurface,
@@ -197,14 +208,14 @@ class _CustodyMgrState extends State<CustodyMgr> {
                                         const SizedBox(height: 4),
                                         Row(
                                           children: [
-                                            const Icon(
+                                            Icon(
                                                 Icons.calendar_today_rounded,
                                                 size: 13,
                                                 color: AppColors.muted),
                                             const SizedBox(width: 5),
                                             Text(
                                               item.date ?? '',
-                                              style: const TextStyle(
+                                              style: TextStyle(
                                                 fontSize: 12.5,
                                                 color: AppColors.muted,
                                                 fontWeight: FontWeight.w500,

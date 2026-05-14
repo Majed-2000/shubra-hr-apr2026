@@ -1,3 +1,13 @@
+// ============================================================================
+// ملف: new_account.dart
+// الغرض: شاشة إنشاء حساب جديد للموظف.
+// التدفق:
+//   1) المستخدم يُدخل رقم الموظف + الإقامة + كلمة المرور.
+//   2) POST /register → عند النجاح يستلم tokens مباشرة (بدون OTP).
+//   3) نخزّن tokens ونحوّل إلى /home.
+// متى يُستخدم: عند أول استخدام للتطبيق (موظف جديد لم يربط حسابه بعد).
+// ============================================================================
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -9,6 +19,8 @@ import 'theme.dart';
 import 'widgets.dart';
 
 /// Employee self-registration: empcode + IQAMA + password.
+///
+/// شاشة تسجيل ذاتي للموظف: empcode + إقامة + كلمة مرور.
 class NewAccount extends StatefulWidget {
   @override
   _NewaccountState createState() => _NewaccountState();
@@ -29,19 +41,34 @@ class _NewaccountState extends State<NewAccount> {
     gettoken();
   }
 
+  @override
+  void dispose() {
+    _employeeIdController.dispose();
+    _iqama.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
   gettoken() async {
     var token = await _storage.read(key: "access_token");
+    if (!mounted) return;
     if (token != null) {
-      Navigator.pushNamed(context, "/home");
+      // pushReplacementNamed بدلاً من pushNamed كي لا يستطيع المستخدم العودة
+      // إلى شاشة التسجيل عبر زر الرجوع.
+      Navigator.pushReplacementNamed(context, "/home");
     }
   }
 
   void _snack(String m) => SnackbarHelpers.show(context, m);
 
+  /// إرسال النموذج: تحقّق ثم POST /register.
+  /// عند النجاح: نخزّن tokens وننتقل إلى /home.
   Future<void> _submit() async {
+    // تحقق من النموذج (validator لكل حقل).
     if (!_formKey.currentState!.validate()) return;
     setState(() => _sending = true);
     try {
+      // POST /register مع بيانات التسجيل.
       final response = await dioClient.post('/register', data: {
         'empcode': _employeeIdController.text,
         'password': _passwordController.text,
@@ -61,7 +88,12 @@ class _NewaccountState extends State<NewAccount> {
           await _storage.write(
               key: 'is_manager', value: isManager ? 'true' : 'false');
           await _storage.write(key: 'current_view', value: 'user');
-          Navigator.pushNamed(context, '/home');
+          // حفظ empcode (مثل login.dart) كي يعمل زر admin "Switch user" بدون نداء إضافي.
+          await _storage.write(
+              key: 'empcode', value: _employeeIdController.text);
+          if (!mounted) return;
+          // pushReplacementNamed يمنع الرجوع لشاشة التسجيل عبر زر الرجوع.
+          Navigator.pushReplacementNamed(context, '/home');
         }
       }
     } catch (_) {
@@ -75,7 +107,6 @@ class _NewaccountState extends State<NewAccount> {
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!;
     final currentLang = Localizations.localeOf(context).languageCode;
-    final size = MediaQuery.of(context).size;
 
     return Scaffold(
       backgroundColor: AppColors.bg,
@@ -92,7 +123,7 @@ class _NewaccountState extends State<NewAccount> {
                     child: InkWell(
                       customBorder: const CircleBorder(),
                       onTap: () => Navigator.pop(context),
-                      child: const Padding(
+                      child: Padding(
                         padding: EdgeInsets.all(9),
                         child: Icon(Icons.arrow_back_ios_new_rounded,
                             color: AppColors.onSurface, size: 18),
@@ -117,12 +148,12 @@ class _NewaccountState extends State<NewAccount> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.language,
+                            Icon(Icons.language,
                                 size: 16, color: AppColors.onSurface),
                             const SizedBox(width: 6),
                             Text(
                               currentLang == 'ar' ? 'English' : 'العربية',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: AppColors.onSurface,
                                 fontWeight: FontWeight.w600,
                                 fontSize: 13,
@@ -148,7 +179,7 @@ class _NewaccountState extends State<NewAccount> {
               const SizedBox(height: 16),
               Text(
                 t.newaccountreg,
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppColors.onSurface,
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
@@ -190,7 +221,7 @@ class _NewaccountState extends State<NewAccount> {
                             children: [
                               Text(
                                 t.password,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 13.5,
                                   fontWeight: FontWeight.w700,
                                   color: AppColors.onSurface,

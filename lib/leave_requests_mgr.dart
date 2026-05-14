@@ -1,3 +1,15 @@
+// ============================================================================
+// ملف: leave_requests_mgr.dart
+// الغرض: قائمة طلبات الإجازات المعلّقة للمدير — للموافقة/الرفض.
+// الميزات:
+//   - بحث في طلبات الموظفين.
+//   - paginated مع scroll-to-load-more.
+//   - الموافقة / الرفض / إضافة ملاحظة / تعديل عدد الأيام.
+// API:
+//   GET  /mgr/getLeaveRequests?page=N
+//   POST /mgr/approveLeave / /mgr/refuseLeave
+// ============================================================================
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
@@ -11,6 +23,8 @@ import 'theme.dart';
 import 'widgets.dart';
 
 /// Manager queue for approving or refusing employee leave requests.
+///
+/// قائمة الموافقة للمدير — يستعرض طلبات الإجازات ويوافق/يرفض.
 class LeaverequestsMgr extends StatefulWidget {
   @override
   _LeaverequestsMgrState createState() => _LeaverequestsMgrState();
@@ -47,6 +61,8 @@ class _LeaverequestsMgrState extends State<LeaverequestsMgr> {
     });
   }
 
+  /// جلب صفحة جديدة من الطلبات.
+  /// إذا الـ backend أرجع قائمة فارغة → stop = true (لا مزيد من الصفحات).
   Future<void> _fetchData() async {
     try {
       final response = await dioClient
@@ -271,11 +287,11 @@ class _LeaverequestsMgrState extends State<LeaverequestsMgr> {
                           "ابحث بالاسم أو الرقم أو نوع الإجازة...",
                       en:
                           "Search by name, ID, or leave type..."),
-                  prefixIcon: const Icon(Icons.search_rounded,
+                  prefixIcon: Icon(Icons.search_rounded,
                       color: AppColors.muted),
                   suffixIcon: _query.isNotEmpty
                       ? IconButton(
-                          icon: const Icon(Icons.close_rounded,
+                          icon: Icon(Icons.close_rounded,
                               color: AppColors.muted),
                           onPressed: () {
                             _searchController.clear();
@@ -445,7 +461,7 @@ class _LeaverequestsMgrState extends State<LeaverequestsMgr> {
                         children: [
                           Text(
                             item.empname ?? '-',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontWeight: FontWeight.w800,
                               fontSize: 15,
                               color: AppColors.onSurface,
@@ -454,7 +470,7 @@ class _LeaverequestsMgrState extends State<LeaverequestsMgr> {
                           const SizedBox(height: 2),
                           Text(
                             "${t.empcode}: ${item.emcd ?? ''}",
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: AppColors.muted,
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
@@ -468,7 +484,7 @@ class _LeaverequestsMgrState extends State<LeaverequestsMgr> {
                   ],
                 ),
                 const SizedBox(height: 10),
-                const Divider(height: 1, color: AppColors.border),
+                Divider(height: 1, color: AppColors.border),
                 const SizedBox(height: 8),
                 DetailRow(
                   icon: Icons.merge_type_rounded,
@@ -523,7 +539,7 @@ class _LeaverequestsMgrState extends State<LeaverequestsMgr> {
                       errorBuilder: (_, __, ___) => Container(
                         padding: const EdgeInsets.all(20),
                         color: AppColors.surfaceAlt,
-                        child: const Icon(Icons.broken_image,
+                        child: Icon(Icons.broken_image,
                             color: AppColors.muted),
                       ),
                     ),

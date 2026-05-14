@@ -1,9 +1,17 @@
+// ============================================================================
+// ملف: terms.dart
+// الغرض: صفحة "شروط الاستخدام" — نص قانوني يحدّد قواعد استخدام التطبيق.
+// محتوى ثابت — لا اتصال بالـ backend.
+// ============================================================================
+
 import 'package:flutter/material.dart';
 
 import 'theme.dart';
 import 'widgets.dart';
 
 /// Terms of Service — initial v1.0; legal can replace later.
+///
+/// صفحة شروط الاستخدام — نص ثابت يمكن لـ legal تعديله لاحقاً.
 class TermsScreen extends StatelessWidget {
   const TermsScreen({super.key});
 
@@ -88,7 +96,7 @@ class _Block extends StatelessWidget {
           children: [
             Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.onSurface,
                 fontSize: 15,
                 fontWeight: FontWeight.w800,
@@ -97,7 +105,7 @@ class _Block extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               body,
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.onSurface,
                 fontSize: 13.5,
                 height: 1.65,
