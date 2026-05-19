@@ -19,6 +19,7 @@
       "Bash(git add *)",
       "Bash(git commit *)",
       "Bash(git tag *)",
+      "Bash(git push *)",
       "Bash(flutter analyze *)",
       "WebFetch(domain:play.google.com)",
       "WebFetch(domain:25282016.fs1.hubspotusercontent-eu1.net)",

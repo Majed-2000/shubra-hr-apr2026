@@ -10,9 +10,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'config/app_config.dart';
+import 'config/gov_apps.dart';
 import 'dio_client.dart';
 import 'l10n/app_localizations.dart';
 import 'main.dart';
+import 'services/gov_app_launcher.dart';
 import 'shared/utils/dio_errors.dart';
 import 'shared/utils/logger.dart';
 import 'shared/utils/snackbar.dart';
@@ -494,6 +496,41 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
           ],
+          const SizedBox(height: 10),
+          ListSectionTitle(
+              title: bi(context,
+                  ar: "الخدمات الحكومية", en: "Government Services")),
+          GlassCard(
+            padding: EdgeInsets.zero,
+            child: Column(
+              children: [
+                for (int i = 0; i < govApps.length; i++) ...[
+                  _SettingTile(
+                    icon: govApps[i].icon,
+                    iconColor: AppColors.primary,
+                    title: bi(context,
+                        ar: govApps[i].arName, en: govApps[i].enName),
+                    trailing: Icon(Icons.open_in_new_rounded,
+                        size: 18, color: AppColors.muted),
+                    onTap: () async {
+                      final ok = await GovAppLauncher.launch(govApps[i]);
+                      if (!ok && context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(bi(context,
+                                ar: "تعذّر فتح التطبيق",
+                                en: "Couldn't open the app")),
+                          ),
+                        );
+                      }
+                    },
+                  ),
+                  if (i < govApps.length - 1)
+                    Divider(height: 1, color: AppColors.border),
+                ],
+              ],
+            ),
+          ),
           const SizedBox(height: 10),
           ListSectionTitle(title: bi(context, ar: "حول", en: "About")),
           GlassCard(
