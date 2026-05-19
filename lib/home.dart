@@ -19,6 +19,7 @@ import 'package:shubraepp/main.dart';
 import 'dio_client.dart';
 import 'l10n/app_localizations.dart';
 import 'manual_punch.dart';
+import 'prayer/prayer_widget.dart';
 import 'shared/utils/logger.dart';
 import 'theme.dart';
 import 'widgets.dart';
@@ -160,6 +161,11 @@ class _HomeState extends State<Home> {
                   SliverToBoxAdapter(child: _buildSkeleton(context)),
               ] else ...[
                 SliverToBoxAdapter(child: _buildStatsRow(t)),
+                const SliverToBoxAdapter(
+                    child: Padding(
+                  padding: EdgeInsets.only(top: 16),
+                  child: PrayerWidget(),
+                )),
                 SliverToBoxAdapter(child: _buildBirthdayAndOccasions(t)),
                 SliverToBoxAdapter(child: _buildQuickActions(t)),
                 SliverToBoxAdapter(child: _buildInfoCard(t)),
@@ -528,6 +534,9 @@ class _HomeState extends State<Home> {
           AppColors.success, "/attendance"),
       _QuickAction(Icons.payments_rounded, t.salaryDetails,
           AppColors.primary, "/salaryDetails"),
+      _QuickAction(Icons.calculate_rounded,
+          bi(context, ar: "مكافأة نهاية الخدمة", en: "End-of-Service"),
+          AppColors.primary, "/eosCalculator"),
       _QuickAction(Icons.badge_rounded, t.digitalCard,
           AppColors.secondary, "/digitalCard"),
       _QuickAction(Icons.groups_rounded, t.colleagues,

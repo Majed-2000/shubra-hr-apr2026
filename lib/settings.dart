@@ -14,6 +14,7 @@ import 'config/gov_apps.dart';
 import 'dio_client.dart';
 import 'l10n/app_localizations.dart';
 import 'main.dart';
+import 'security/biometric_service.dart';
 import 'services/gov_app_launcher.dart';
 import 'shared/utils/dio_errors.dart';
 import 'shared/utils/logger.dart';
@@ -41,10 +42,91 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _isImpersonating = false;
   bool _switching = false;
 
+  // ── biometric prefs (feature 1 + 2) ──
+  bool _lockEnabled = false;
+  bool _loginEnabled = false;
+  int _lockTimeoutSec = 60;
+  BiometricStatus _bioStatus = BiometricStatus.unavailable;
+
   @override
   void initState() {
     super.initState();
     _loadAdminState();
+    _loadBiometricPrefs();
+  }
+
+  Future<void> _loadBiometricPrefs() async {
+    final status = await BiometricService.status();
+    final lock = await BiometricService.isLockEnabled;
+    final login = await BiometricService.isLoginEnabled;
+    final timeout = await BiometricService.lockTimeoutSeconds;
+    if (!mounted) return;
+    setState(() {
+      _bioStatus = status;
+      _lockEnabled = lock;
+      _loginEnabled = login;
+      _lockTimeoutSec = timeout;
+    });
+  }
+
+  Future<void> _toggleLock(bool v) async {
+    if (v) {
+      final res = await BiometricService.authenticate(
+        reason: bi(context,
+            ar: 'فعّل قفل التطبيق',
+            en: 'Enable app lock'),
+      );
+      if (res != BiometricResult.success) return;
+    }
+    await BiometricService.setLockEnabled(v);
+    if (mounted) setState(() => _lockEnabled = v);
+  }
+
+  Future<void> _toggleLogin(bool v) async {
+    if (v) {
+      final res = await BiometricService.authenticate(
+        reason: bi(context,
+            ar: 'فعّل تسجيل الدخول بالبصمة',
+            en: 'Enable biometric sign-in'),
+      );
+      if (res != BiometricResult.success) return;
+    }
+    await BiometricService.setLoginEnabled(v);
+    if (mounted) setState(() => _loginEnabled = v);
+  }
+
+  Future<void> _pickTimeout() async {
+    final options = const [
+      (label: 'Immediately / فوراً', sec: 0),
+      (label: '1 min / دقيقة', sec: 60),
+      (label: '5 min / 5 دقائق', sec: 300),
+      (label: '15 min / 15 دقيقة', sec: 900),
+    ];
+    final picked = await showModalBottomSheet<int>(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final o in options)
+              ListTile(
+                title: Text(o.label),
+                trailing: o.sec == _lockTimeoutSec
+                    ? Icon(Icons.check_rounded, color: AppColors.primary)
+                    : null,
+                onTap: () => Navigator.pop(ctx, o.sec),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (picked == null) return;
+    await BiometricService.setLockTimeout(picked);
+    if (mounted) setState(() => _lockTimeoutSec = picked);
   }
 
   /// Pulls the logged-in empcode + impersonation flag from secure storage so
@@ -481,6 +563,65 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ],
             ),
           ),
+          if (_bioStatus == BiometricStatus.available) ...[
+            const SizedBox(height: 10),
+            ListSectionTitle(title: bi(context, ar: "الأمان", en: "Security")),
+            GlassCard(
+              padding: EdgeInsets.zero,
+              child: Column(
+                children: [
+                  SwitchListTile(
+                    secondary:
+                        Icon(Icons.lock_outline_rounded, color: AppColors.primary),
+                    title: Text(bi(context,
+                        ar: "قفل التطبيق بالبصمة", en: "App lock")),
+                    subtitle: Text(bi(context,
+                        ar: "اطلب بصمة عند فتح التطبيق",
+                        en: "Require biometric to open the app")),
+                    value: _lockEnabled,
+                    activeColor: AppColors.primary,
+                    onChanged: _toggleLock,
+                  ),
+                  if (_lockEnabled)
+                    Divider(height: 1, color: AppColors.border),
+                  if (_lockEnabled)
+                    _SettingTile(
+                      icon: Icons.timer_outlined,
+                      iconColor: AppColors.secondary,
+                      title: bi(context,
+                          ar: "مدة القفل بعد الخمول",
+                          en: "Auto-lock timeout"),
+                      trailing: Text(
+                        _lockTimeoutSec == 0
+                            ? bi(context, ar: 'فوراً', en: 'Immediately')
+                            : _lockTimeoutSec < 60
+                                ? '${_lockTimeoutSec}s'
+                                : '${_lockTimeoutSec ~/ 60} min',
+                        style: TextStyle(
+                          color: AppColors.muted,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      onTap: _pickTimeout,
+                    ),
+                  Divider(height: 1, color: AppColors.border),
+                  SwitchListTile(
+                    secondary:
+                        Icon(Icons.fingerprint_rounded, color: AppColors.primary),
+                    title: Text(bi(context,
+                        ar: "تسجيل الدخول بالبصمة",
+                        en: "Biometric sign-in")),
+                    subtitle: Text(bi(context,
+                        ar: "بدلاً من رمز SMS كل مرة",
+                        en: "Skip the SMS OTP next time")),
+                    value: _loginEnabled,
+                    activeColor: AppColors.primary,
+                    onChanged: _toggleLogin,
+                  ),
+                ],
+              ),
+            ),
+          ],
           if (showAdminTile) ...[
             const SizedBox(height: 10),
             ListSectionTitle(

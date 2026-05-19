@@ -21,6 +21,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shubraepp/main.dart';
 import 'dio_client.dart';
 import 'l10n/app_localizations.dart';
+import 'security/biometric_enrollment_sheet.dart';
 import 'shared/utils/dio_errors.dart';
 import 'shared/utils/logger.dart';
 import 'shared/utils/snackbar.dart';
@@ -149,7 +150,9 @@ class _LoginState extends State<Login> {
           await _storage.write(
               key: 'mgr_refresh_token', value: data['mgr_refresh_token']);
         }
-        // كل شيء محفوظ — انتقل لـ /home واستبدل شاشة الدخول (لا يستطيع العودة لها).
+        // كل شيء محفوظ — اعرض اقتراح تفعيل البصمة (مرة واحدة) ثم انتقل لـ /home.
+        await BiometricEnrollmentSheet.maybeShow(context);
+        if (!mounted) return;
         Navigator.pushReplacementNamed(context, '/home');
       } else {
         logD('login /verify-user failed: $code body=$data');

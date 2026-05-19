@@ -41,6 +41,9 @@ import 'notifications.dart';
 import 'custody_mgr.dart';
 import 'home_mgr.dart';
 import 'l10n/app_localizations.dart';
+import 'eos/eos_calculator.dart';
+import 'security/biometric_lock_screen.dart';
+import 'security/biometric_service.dart';
 import 'leave_requests_mgr.dart';
 import 'loan_requests_mgr.dart';
 import 'shared/utils/logger.dart';
@@ -152,7 +155,11 @@ class MyApp extends StatefulWidget {
   @override
   _MyAppState createState() => _MyAppState();
 }
-class _MyAppState extends State<MyApp>  {
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
+  // Track when the app was last backgrounded so we can re-lock if it
+  // returns to foreground past the user's lock timeout (feature 1).
+  DateTime? _pausedAt;
+  final _navKey = GlobalKey<NavigatorState>();
 
   /// إعداد Firebase Cloud Messaging:
   ///   1) طلب صلاحية الإشعارات (يظهر popup للمستخدم).
@@ -191,6 +198,7 @@ class _MyAppState extends State<MyApp>  {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _initFCM();
     // Foreground messages
     // مستمع لرسائل تصل والتطبيق ظاهر — هنا فقط نلوّغها (لا UI).
@@ -203,6 +211,34 @@ class _MyAppState extends State<MyApp>  {
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
       logD('Notification opened from background');
     });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) async {
+    if (state == AppLifecycleState.paused) {
+      _pausedAt = DateTime.now();
+    } else if (state == AppLifecycleState.resumed && _pausedAt != null) {
+      final timeout = await BiometricService.lockTimeoutSeconds;
+      final elapsed = DateTime.now().difference(_pausedAt!).inSeconds;
+      _pausedAt = null;
+      if (elapsed < timeout) return;
+      final lockOn = await BiometricService.isLockEnabled;
+      if (!lockOn) return;
+      final ctx = _navKey.currentState?.context;
+      if (ctx == null) return;
+      final current = ModalRoute.of(ctx)?.settings.name;
+      if (current == '/lock' || current == '/login' || current == '/splash') {
+        return;
+      }
+      _navKey.currentState
+          ?.pushNamedAndRemoveUntil('/lock', (_) => false, arguments: current);
+    }
   }
 
   @override
@@ -219,6 +255,7 @@ class _MyAppState extends State<MyApp>  {
           valueListenable: localeNotifier,
           builder: (context, locale, _) {
             return MaterialApp(
+              navigatorKey: _navKey,
               // إخفاء شريط "Debug" في الزاوية أثناء التطوير.
               debugShowCheckedModeBanner: false,
               // theme فاتح + theme داكن — MaterialApp يختار حسب themeMode.
@@ -277,6 +314,8 @@ class _MyAppState extends State<MyApp>  {
                 '/website': (context) => const WebsiteScreen(),
                 '/sessions': (context) => const SessionsScreen(),
                 '/logout': (context) => Login(),
+                '/lock': (context) => const BiometricLockScreen(),
+                '/eosCalculator': (context) => const EosCalculator(),
               },
             );
           },
@@ -354,16 +393,25 @@ class _SplashScreenState extends State<SplashScreen> {
 
     if (!mounted) return;
 
-    // Route based on current view + which token actually exists.
+    // Resolve where the user should land after splash.
+    String target;
     if (currentView == 'mgr' && mgrToken != null) {
-      Navigator.pushReplacementNamed(context, '/homeMgr');
+      target = '/homeMgr';
     } else if (userToken != null) {
-      Navigator.pushReplacementNamed(context, '/home');
+      target = '/home';
     } else if (mgrToken != null) {
-      // No user token but a manager session is alive.
-      Navigator.pushReplacementNamed(context, '/homeMgr');
+      target = '/homeMgr';
     } else {
-      Navigator.pushReplacementNamed(context, '/login');
+      target = '/login';
+    }
+
+    // If biometric app lock is on AND we're heading to an authenticated
+    // route, gate it through /lock first (feature 1).
+    final lockOn = await BiometricService.isLockEnabled;
+    if (lockOn && target != '/login') {
+      Navigator.pushReplacementNamed(context, '/lock', arguments: target);
+    } else {
+      Navigator.pushReplacementNamed(context, target);
     }
   }
 

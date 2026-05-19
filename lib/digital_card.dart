@@ -26,6 +26,8 @@ import 'package:share_plus/share_plus.dart';
 import 'config/app_config.dart';
 import 'dio_client.dart';
 import 'l10n/app_localizations.dart';
+import 'shared/services/local_cache.dart';
+import 'shared/services/sync_tracker.dart';
 import 'shared/utils/dio_errors.dart';
 import 'shared/utils/logger.dart';
 import 'shared/utils/snackbar.dart';
@@ -77,7 +79,44 @@ class _DigitalCardState extends State<DigitalCard>
       duration: const Duration(milliseconds: 600),
     );
     _fade = CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeOut);
-    _fetch();
+    _hydrateFromCache().then((_) => _fetch());
+  }
+
+  /// Feature 5: render last good snapshot immediately so the card works
+  /// offline. Background fetch refreshes when the network is back.
+  Future<void> _hydrateFromCache() async {
+    final cached = await LocalCache.get<Map<String, dynamic>>('digital_card');
+    if (cached == null) return;
+    try {
+      final data = Map<String, dynamic>.from(cached.data);
+      final info = Map<String, dynamic>.from(data['info'] ?? {});
+      _empCode = info['emcd']?.toString() ?? '';
+      _nameAr = [
+        info['emnma1'],
+        info['emnma2'],
+        info['emnma3'],
+      ].whereType<Object>().map((e) => e.toString()).join(' ').trim();
+      _jobTitle = _firstNonEmpty(data,
+              ['jobTitle', 'job_title', 'jobtitle', 'JobTitle']) ??
+          _firstNonEmpty(info, ['jobTitle', 'job_title', 'jobtitle', 'emjbtl', 'emjbnm']) ??
+          '';
+      _department = _firstNonEmpty(data,
+              ['deptName', 'dept_name', 'departmentName', 'department']) ??
+          _firstNonEmpty(info, ['deptName', 'dept_name']) ??
+          '';
+      _photoUrl = AppConfig.employeePhotoUrl(_empCode);
+      if (_photoUrl != null) {
+        final token = await _storage.read(key: 'access_token');
+        _photoHeaders = token != null ? {'Authorization': 'Bearer $token'} : null;
+      }
+      _hasData = _empCode.isNotEmpty;
+      if (mounted) {
+        setState(() {});
+        _fadeCtrl.forward(from: 0);
+      }
+    } catch (e) {
+      logD('digital_card cache hydrate failed: $e');
+    }
   }
 
   @override
@@ -151,6 +190,9 @@ class _DigitalCardState extends State<DigitalCard>
 
       if (_hasData && mounted) {
         _fadeCtrl.forward(from: 0);
+        // Persist cache + mark sync for the offline path next launch.
+        await LocalCache.set('digital_card', data, ttl: const Duration(days: 30));
+        await SyncTracker.markSynced('digital_card');
       }
     } on DioException catch (e) {
       logD('Card fetch failed: $e');
