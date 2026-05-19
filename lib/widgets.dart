@@ -13,6 +13,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'theme.dart';
 
 /// Bilingual string helper — picks Arabic or English based on current locale.
@@ -261,12 +262,21 @@ class EmptyState extends StatelessWidget {
   final String? subtitle;
   final Color? accent;
 
+  /// Optional SVG illustration path (e.g. 'assets/illustrations/empty_inbox.svg').
+  /// When provided, replaces the icon-in-circle.
+  final String? illustrationAsset;
+
+  /// Height of the illustration (default 160). Width auto-scales.
+  final double illustrationHeight;
+
   const EmptyState({
     super.key,
     required this.icon,
     required this.title,
     this.subtitle,
     this.accent,
+    this.illustrationAsset,
+    this.illustrationHeight = 160,
   });
 
   @override
@@ -282,15 +292,22 @@ class EmptyState extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.08),
-                shape: BoxShape.circle,
+            if (illustrationAsset != null)
+              SvgPicture.asset(
+                illustrationAsset!,
+                height: illustrationHeight,
+                fit: BoxFit.contain,
+              )
+            else
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.08),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: color, size: 36),
               ),
-              child: Icon(icon, color: color, size: 36),
-            ),
             const SizedBox(height: 16),
             Text(
               title,

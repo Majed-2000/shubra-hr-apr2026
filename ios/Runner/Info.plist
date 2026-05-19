@@ -28,6 +28,10 @@
 	<false/>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>NSFaceIDUsageDescription</key>
+	<string>للسماح بفتح التطبيق ببصمتك أو Face ID</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>لحساب أوقات الصلاة وفقاً لموقعك</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
