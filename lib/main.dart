@@ -41,9 +41,17 @@ import 'notifications.dart';
 import 'custody_mgr.dart';
 import 'home_mgr.dart';
 import 'l10n/app_localizations.dart';
+import 'documents/document_models.dart';
+import 'documents/document_viewer.dart';
+import 'documents/documents_vault.dart';
 import 'eos/eos_calculator.dart';
 import 'security/biometric_lock_screen.dart';
 import 'security/biometric_service.dart';
+import 'shared/services/deep_link_router.dart';
+import 'shared/services/feature_flags.dart';
+import 'tickets/new_ticket.dart';
+import 'tickets/ticket_detail.dart';
+import 'tickets/ticket_list.dart';
 import 'leave_requests_mgr.dart';
 import 'loan_requests_mgr.dart';
 import 'shared/utils/logger.dart';
@@ -210,6 +218,33 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     // مستمع لفتح إشعار من tray (والتطبيق كان في الخلفية).
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
       logD('Notification opened from background');
+      final link = DeepLinkRouter.fromMessage(message);
+      if (link != null) DeepLinkRouter.queue(link);
+    });
+    // Foreground deep links (FCM data while app is open).
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      final link = DeepLinkRouter.fromMessage(message);
+      if (link == null) return;
+      // Surface as snack; user taps to navigate (avoids stealing context).
+      final ctx = _navKey.currentState?.context;
+      if (ctx != null && ctx.mounted) {
+        ScaffoldMessenger.of(ctx).showSnackBar(
+          SnackBar(
+            content: const Text('HR replied — tap to view'),
+            action: SnackBarAction(
+              label: 'Open',
+              onPressed: () => _navKey.currentState
+                  ?.pushNamed(link.route, arguments: link.arguments),
+            ),
+          ),
+        );
+      }
+    });
+    // Cold-start deep link.
+    FirebaseMessaging.instance.getInitialMessage().then((message) {
+      if (message == null) return;
+      final link = DeepLinkRouter.fromMessage(message);
+      if (link != null) DeepLinkRouter.queue(link);
     });
   }
 
@@ -316,6 +351,11 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
                 '/logout': (context) => Login(),
                 '/lock': (context) => const BiometricLockScreen(),
                 '/eosCalculator': (context) => const EosCalculator(),
+                '/documents': (context) => const DocumentsVault(),
+                '/documentViewer': (context) => const DocumentViewer(),
+                '/tickets': (context) => const TicketList(),
+                '/ticketDetail': (context) => const TicketDetail(),
+                '/newTicket': (context) => const NewTicket(),
               },
             );
           },

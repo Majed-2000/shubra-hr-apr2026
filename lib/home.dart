@@ -20,7 +20,9 @@ import 'dio_client.dart';
 import 'l10n/app_localizations.dart';
 import 'manual_punch.dart';
 import 'prayer/prayer_widget.dart';
+import 'shared/services/feature_flags.dart';
 import 'shared/utils/logger.dart';
+import 'shared/widgets/iqama_alert_banner.dart';
 import 'theme.dart';
 import 'widgets.dart';
 
@@ -161,6 +163,13 @@ class _HomeState extends State<Home> {
                   SliverToBoxAdapter(child: _buildSkeleton(context)),
               ] else ...[
                 SliverToBoxAdapter(child: _buildStatsRow(t)),
+                SliverToBoxAdapter(
+                  child: IqamaAlertBanner(
+                    profileInfo: (empinfo['info'] is Map)
+                        ? Map<String, dynamic>.from(empinfo['info'] as Map)
+                        : null,
+                  ),
+                ),
                 const SliverToBoxAdapter(
                     child: Padding(
                   padding: EdgeInsets.only(top: 16),
@@ -537,6 +546,14 @@ class _HomeState extends State<Home> {
       _QuickAction(Icons.calculate_rounded,
           bi(context, ar: "مكافأة نهاية الخدمة", en: "End-of-Service"),
           AppColors.primary, "/eosCalculator"),
+      if (FeatureFlags.documentVaultEnabled || FeatureFlags.useMockData)
+        _QuickAction(Icons.folder_outlined,
+            bi(context, ar: "مستنداتي", en: "My Documents"),
+            AppColors.secondary, "/documents"),
+      if (FeatureFlags.ticketsEnabled || FeatureFlags.useMockData)
+        _QuickAction(Icons.support_agent_rounded,
+            bi(context, ar: "الدعم والشكاوى", en: "Support & Tickets"),
+            AppColors.danger, "/tickets"),
       _QuickAction(Icons.badge_rounded, t.digitalCard,
           AppColors.secondary, "/digitalCard"),
       _QuickAction(Icons.groups_rounded, t.colleagues,
